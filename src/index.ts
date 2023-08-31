@@ -1,3 +1,5 @@
+import { createRouter } from "radix3"
+
 export type StagesDef<Stage, Event, Context> = {
   stage: Stage
   context: Context
@@ -29,7 +31,9 @@ type Stager<
   T extends TransitionInstance<S, any>
 > = {
   currentStage: S
-  _transitions: Array<T>
+  
+  _store: { [key in S['stage']]: Extract<S, { stage: key }>}
+  
   isLoading: boolean
   on: <N extends S['stage']>(name: N, context: Extract<S, { stage: N }>['context']) => (void | Promise<void>)
   dispatch: <N extends T['name'] | [S['stage'], S['stage']]>(
@@ -62,11 +66,16 @@ type TransitionInstance<
   ) => valueOrPromiseValue<Extract<Stages, { stage: To extends Array<infer T> ? T : To }>> | undefined
 }
 
+type StageListener<
+  Stages extends StageDef
+> = (stage: Stages) => (void | Promise<void>)
+
 class StageBuilder<
   S extends StageDef, 
   T extends TransitionInstance<S, Stager<any, any>> = NoTransition
 > {
   transitions: Array<TransitionInstance<S, any>> = []
+  listeners: Array<StageListener<S>> = []
   stager: Stager<S, T>
 
   transition<
@@ -77,6 +86,8 @@ class StageBuilder<
   >(
     option: TransitionInstance<S, Stager<S, T>, Event, From, To, P>
   ): StageBuilder<S, T | TransitionInstance<S, Stager<S, T>, Event, From, To, P>> {
+    this.transitions.push(option)
+
     return this as any
   }
 
@@ -84,11 +95,41 @@ class StageBuilder<
     name: N, 
     listener: (stage: Extract<S, { stage: inferValueOrArrayValue<N> }>) => (void | Promise<void>)
   ): StageBuilder<S, T> {
+    this.listeners.push(listener)
     return this as any
   }
 
-  build(stagerOptions: StagerOptions): Stager<S, T> {
-    return {} as any
+  build({ 
+    initialStage,
+    initialStore
+  }: StagerOptions & {
+    initialStage: S['stage'],
+    initialStore: { [key in S['stage']]: Extract<S, { stage: key }>}
+  }): Stager<S, T> {
+    const transitionRouter = createRouter<TransitionInstance<S, Stager<S, T>>>()
+    for (const transition of this.transitions) {
+      const froms = Array.isArray(transition.from) ? transition.from : [transition.from]
+      const tos = Array.isArray(transition.to) ? transition.to : [transition.to]
+
+      for (const from in froms) {
+        for (const to in tos) {
+          transitionRouter.insert(`/route/${from}/${to}`, transition)
+        }
+      }
+    }
+
+    const listenerRouters = createRouter<StageListener<S>>()
+
+    // add transitions to listener
+    // add ons to listener
+    return {
+      currentStage: { stage: initialStage, context: initialStore[initialStage] } as any,
+      _store: initialStore,
+      isLoading: false,
+      dispatch(name, ...params) {
+        
+      },
+    }
   }
 }
 

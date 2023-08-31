@@ -37,11 +37,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"radix3@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "radix3@npm:1.1.0"
+  checksum: e5e6ed8fcf68be4d124bca4f7da7ba0fc7c5b6f9e98bc3f4424459c45d50f1f92506c5f7f8421b5cfee5823c524a4a2cef416053e88845813ce9fc9c7086729a
+  languageName: node
+  linkType: hard
+
 "use-stages@workspace:.":
   version: 0.0.0-use.local
   resolution: "use-stages@workspace:."
   dependencies:
     "@types/react": ^18.2.20
+    radix3: ^1.1.0
   peerDependencies:
     "@types/react": "*"
     react: "*"

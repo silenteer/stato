@@ -1,6 +1,8 @@
 {
   "compilerOptions": {
     "jsx": "preserve",
-    "moduleResolution": "Node"
+    "target": "ESNext",
+    "moduleResolution": "Node",
+    "strictNullChecks": true
   }
 }

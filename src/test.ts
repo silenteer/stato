@@ -40,4 +40,4 @@ const x = create<Stages>()
     }
   })
   
-x.build({})
+const k = x.build({})
