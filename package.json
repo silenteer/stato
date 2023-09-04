@@ -6,7 +6,8 @@
     "react": "*"
   },
   "devDependencies": {
-    "@types/react": "^18.2.20"
+    "@types/react": "^18.2.20",
+    "vitest": "^0.34.3"
   },
   "dependencies": {
     "radix3": "^1.1.0"

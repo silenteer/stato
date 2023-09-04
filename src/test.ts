@@ -11,11 +11,11 @@ const x = create<Stages>()
     from: 'idle',
     to: ['error', 'success'],
     async execution(ctx, param: () => {}) {
-      if (true) {
-        return { stage: 'success', context: {} as string }
-      } else {
-        return { stage: 'error', context: new Error('unexpected')}
-      }
+      const x = Promise.resolve()
+
+      return await x
+        .then(_ => ({ stage: 'success', context: {} as string }) as const)
+        .catch(_ => ({ stage: 'error', context: new Error('unexpected') }) as const)
     }
   })
   .transition({
@@ -39,5 +39,5 @@ const x = create<Stages>()
       context
     }
   })
-  
+
 const k = x.build({})

@@ -27,22 +27,22 @@ type valueOrArrayValue<V> = V | Array<V>
 type ignoreFirstValue<T> = T extends [any, ...infer R] ? R : T
 
 type Stager<
-  S extends StageDef, 
+  S extends StageDef,
   T extends TransitionInstance<S, any>
 > = {
   currentStage: S
-  
-  _store: { [key in S['stage']]: Extract<S, { stage: key }>}
-  
+
+  _store: { [key in S['stage']]: Extract<S, { stage: key }> }
+
   isLoading: boolean
-  on: <N extends S['stage']>(name: N, context: Extract<S, { stage: N }>['context']) => (void | Promise<void>)
+  on: <X extends valueOrArrayValue<S['stage']>>(stage: X, cb: (stage: Extract<S, { stage: inferValueOrArrayValue<X> }>) => (void | Promise<void>)) => void
   dispatch: <N extends T['name'] | [S['stage'], S['stage']]>(
     ...params: [
-      N, 
-      ...N extends T['name'] 
-        ? ignoreFirstValue<Parameters<Extract<T, { name: N }>['execution']>>
-        : any
-      ]
+      N,
+      ...N extends T['name']
+      ? ignoreFirstValue<Parameters<Extract<T, { name: N }>['execution']>>
+      : any
+    ]
   ) => void
 }
 
@@ -58,20 +58,23 @@ type TransitionInstance<
   from: From
   to: To
   execution: (
-    executionCtx: { 
+    executionCtx: {
       context: Extract<Stages, { stage: From }>['context'],
       dispatch: S['dispatch']
-    }, 
+    },
     ...params: Params
   ) => valueOrPromiseValue<Extract<Stages, { stage: To extends Array<infer T> ? T : To }>> | undefined
 }
 
 type StageListener<
   Stages extends StageDef
-> = (stage: Stages) => (void | Promise<void>)
+> = {
+  stage: string[]
+  listener: (stage: Stages) => (void | Promise<void>)
+}
 
 class StageBuilder<
-  S extends StageDef, 
+  S extends StageDef,
   T extends TransitionInstance<S, Stager<any, any>> = NoTransition
 > {
   transitions: Array<TransitionInstance<S, any>> = []
@@ -79,9 +82,9 @@ class StageBuilder<
   stager: Stager<S, T>
 
   transition<
-    Event extends string, 
-    From extends valueOrArrayValue<S['stage']>, 
-    To extends valueOrArrayValue<S['stage']>, 
+    Event extends string,
+    From extends valueOrArrayValue<S['stage']>,
+    To extends valueOrArrayValue<S['stage']>,
     P extends unknown[]
   >(
     option: TransitionInstance<S, Stager<S, T>, Event, From, To, P>
@@ -92,19 +95,20 @@ class StageBuilder<
   }
 
   on<N extends valueOrArrayValue<S['stage']>>(
-    name: N, 
+    name: N,
     listener: (stage: Extract<S, { stage: inferValueOrArrayValue<N> }>) => (void | Promise<void>)
   ): StageBuilder<S, T> {
-    this.listeners.push(listener)
+    const names = typeof name === 'string' ? [name] : [...name]
+    this.listeners.push({ stage: names, listener })
     return this as any
   }
 
-  build({ 
+  build<IS extends S['stage']>({
     initialStage,
-    initialStore
+    context
   }: StagerOptions & {
-    initialStage: S['stage'],
-    initialStore: { [key in S['stage']]: Extract<S, { stage: key }>}
+    initialStage: IS,
+    context: Extract<S, { stage: IS }>['context']
   }): Stager<S, T> {
     const transitionRouter = createRouter<TransitionInstance<S, Stager<S, T>>>()
     for (const transition of this.transitions) {
@@ -119,15 +123,22 @@ class StageBuilder<
     }
 
     const listenerRouters = createRouter<StageListener<S>>()
+    for (const listenerRegister of this.listeners) {
+      listenerRouters.insert(`/listen/${listenerRegister.stage}`, listenerRegister)
+    }
 
     // add transitions to listener
     // add ons to listener
     return {
-      currentStage: { stage: initialStage, context: initialStore[initialStage] } as any,
-      _store: initialStore,
+      currentStage: { stage: initialStage, context } as any,
+      _store: context,
       isLoading: false,
       dispatch(name, ...params) {
-        
+
+      },
+      on(stage, cb) {
+        const names = typeof stage === 'string' ? [stage] : [...stage]
+        names.forEach(name => listenerRouters.insert(`/listen/${name}`, { stage: [name], listener: cb }))
       },
     }
   }
