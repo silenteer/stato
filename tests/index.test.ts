@@ -1,55 +1,66 @@
-import { describe, expect, test } from "vitest"
+import { assert, describe, expect, test, vi } from "vitest"
 import { Stage, create } from "../src"
 
 describe("basic machine function", () => {
 
   type Stages =
-    | Stage<{ stage: 'idle', context: undefined }>
-    | Stage<{ stage: 'success', context: string }>
-    | Stage<{ stage: 'error', context: Error }>
+    | Stage<{ stage: 'idle', context: { promise: () => Promise<string> }}>
+    | Stage<{ stage: 'success', context: { result: string, promise: () => Promise<string> }}>
+    | Stage<{ stage: 'error', context: { error: Error, promise: () => Promise<string> }}>
+
+  const mockContextFn = vi.fn(async () => '1234')
+  const mockEventListener = vi.fn()
 
   const x = create<Stages>()
     .transition({
       name: 'init',
-      from: 'idle',
+      from: ['idle', 'error', 'success'],
       to: ['error', 'success'],
-      async execution(ctx, param: () => {}) {
-        const x = Promise.resolve()
-
-        return await x
-          .then(_ => ({ stage: 'success', context: {} as string }) as const)
-          .catch(_ => ({ stage: 'error', context: new Error('unexpected') }) as const)
+      async execution({ stage }) {
+        try {
+          const result = await stage.context.promise()
+          return { stage: 'success', context: {...stage.context, result }}
+        } catch(e) {
+          return {stage: 'error', context: { ...stage.context, error: e}}
+        }
       }
     })
     .transition({
       name: 'reset',
       from: ['error', 'success'],
       to: 'idle',
-      execution(ctx) {
-        return { stage: 'idle', context: undefined }
+      async execution({ stage }) {
+        return { stage: 'idle', context: { promise: stage.context.promise }}
       }
     })
-    .transition({
-      name: 'retry',
-      from: ['error', 'success'],
-      to: ['error', 'success'],
-      execution(ctx) {
-        return { stage: 'success', context: '1' }
-      }
-    })
-    .on(['success', 'error'], ({ stage, context }) => {
-      if (stage === 'success') {
-        context
-      }
-    })
+    .on(['success', 'error'], mockEventListener)
 
   const machine = x.build({
-    initialStage: 'idle',
-    context: undefined
+    initialStage: { stage: 'idle', context: { promise: mockContextFn } }
   })
 
   test('expect machine to function', async () => {
     expect(machine.currentStage.stage).toBe('idle')
+    let transition = machine.dispatch('init')
+    console.log(machine.transitioning)
+    expect(machine.transitioning?.[0]).toContain('idle')
+    expect(machine.transitioning?.[1]).toContain('error')
+    expect(machine.transitioning?.[1]).toContain('success')
+
+    await transition
+    expect(machine.currentStage.stage).toBe('success')
+    expect(machine.transitioning).toBeUndefined()
+
+    expect(machine.currentStage.stage === 'success' && machine.currentStage.context.result === '1234')
+
+    expect(mockEventListener).toBeCalledTimes(1)
+    mockContextFn.mockRejectedValueOnce(new Error('hello'))
+    
+    transition = machine.dispatch('init')
+    await transition
+
+    expect(machine.currentStage.stage).toBe('error')
+
   })
 })
 
