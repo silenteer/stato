@@ -1,5 +1,5 @@
 {
-  "name": "use-stages",
+  "name": "use-stager",
   "packageManager": "yarn@3.5.0",
   "version": "1.0.0",
   "description": "Maybe a simpler all-purpose (but mostly frontend) state machine",

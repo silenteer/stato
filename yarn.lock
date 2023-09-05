@@ -3719,9 +3719,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"use-stages@workspace:.":
+"use-stager@workspace:.":
   version: 0.0.0-use.local
-  resolution: "use-stages@workspace:."
+  resolution: "use-stager@workspace:."
   dependencies:
     "@types/react": ^18.2.20
     radix3: ^1.1.0
