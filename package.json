@@ -1,15 +1,38 @@
 {
   "name": "use-stages",
   "packageManager": "yarn@3.5.0",
-  "peerDependencies": {
-    "@types/react": "*",
-    "react": "*"
-  },
+  "version": "1.0.0",
+  "description": "Maybe a simpler all-purpose (but mostly frontend) state machine",
+  "author": "Lagz0ne <duke@silentium.io>",
   "devDependencies": {
     "@types/react": "^18.2.20",
+    "standard-version": "^9.5.0",
+    "tsup": "^7.2.0",
+    "typescript": "^5.2.2",
     "vitest": "^0.34.3"
   },
   "dependencies": {
     "radix3": "^1.1.0"
+  },
+  "scripts": {
+    "dev": "yarn run tsup --watch",
+    "test": "vitest run",
+    "build": "yarn run tsup",
+    "preview": "yarn run standard-version --path . --dry-run -t use-stages",
+    "bump": "yarn run standard-version --path . -t use-stages",
+    "release": "git push --follow-tags origin main && npm publish --access public"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "tsup": {
+    "entry": [
+      "src/index.ts"
+    ],
+    "minify": false,
+    "treeshake": false,
+    "splitting": false,
+    "sourcemap": true,
+    "clean": true,
+    "dts": true
   }
 }
