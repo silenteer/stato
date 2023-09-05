@@ -20,7 +20,7 @@
     "build": "yarn run tsup",
     "preview": "yarn run standard-version --path . --dry-run -t use-stages",
     "bump": "yarn run standard-version --path . -t use-stages",
-    "release": "git push --follow-tags origin main && npm publish --access public"
+    "release": "git push --follow-tags origin master && npm publish --access public"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
