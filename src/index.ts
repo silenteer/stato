@@ -1,6 +1,6 @@
 import { createRouter } from "radix3"
 import { proxy, useSnapshot } from "valtio"
-import structuredClone from "@ungap/structured-clone"
+import { useEffect } from "react"
 
 export type StagesDef<Stage, Event, Context> = {
   stage: Stage
@@ -46,7 +46,8 @@ type Stager<
     ]
   ) => Promise<void>
   reset: () => void
-  useStage: (filter?: (stage: S) => any) => ReturnType<typeof useSnapshot>
+  useStage: (filter?: (stage: S) => any) => ReturnType<typeof useSnapshot<S>>
+  useListen: Stager<S, T>['on']
 }
 
 type TransitionInstance<
@@ -142,6 +143,21 @@ class StageBuilder<
         }
 
         container.add(register)
+      }
+
+      return () => unregisterListener(register)
+    }
+
+    const unregisterListener = (register: StageListener<S>) => {
+      for (const stage of register.stage) {
+        let container = listenerRouters.lookup(`/listen/${stage}`)
+        if (container) {
+          container.delete(register)
+
+          if (container.size === 0) {
+            listenerRouters.remove(`/listen/${stage}`)
+          }
+        }
       }
     }
 
@@ -257,8 +273,8 @@ class StageBuilder<
         }
       },
       on(stage, cb) {
-        const names = typeof stage === 'string' ? [stage] : [...stage]
-        registerListener({ stage, listener: cb})
+        const names = typeof stage === 'string' ? [stage] : stage
+        return registerListener({ stage: names, listener: cb})
       },
       useStage(filter) {
         let target = stager.currentStage
@@ -268,6 +284,13 @@ class StageBuilder<
 
         return useSnapshot(target)
       },
+      useListen(stage, cb) {
+        const names = typeof stage === 'string' ? [stage] : stage
+        
+        useEffect(() => {
+          return registerListener({ stage: names, listener: cb })
+        }, [])
+      }
     }
 
     return stager
