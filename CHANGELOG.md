@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.3.0](https://github.com/silenteer/use-stage/compare/use-stager1.2.0...use-stager1.3.0) (2023-09-06)
+
+
+### Features
+
+* added useListen for react, added unregister to clean up listening ([9de6b6f](https://github.com/silenteer/use-stage/commit/9de6b6f63cab5e18a6225b7ce586910f86ea7bae))
+
 ## [1.2.0](https://github.com/silenteer/use-stage/compare/use-stager1.1.0...use-stager1.2.0) (2023-09-06)
 
 
