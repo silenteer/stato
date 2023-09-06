@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.4.0](https://github.com/silenteer/use-stage/compare/use-stager1.3.0...use-stager1.4.0) (2023-09-06)
+
+
+### Features
+
+* use lodash.cloneDeep to implement reset, added lifecycle function ([62cfead](https://github.com/silenteer/use-stage/commit/62cfead70bede196d8d99f0314061378feca7d7e))
+
 ## [1.3.0](https://github.com/silenteer/use-stage/compare/use-stager1.2.0...use-stager1.3.0) (2023-09-06)
 
 
