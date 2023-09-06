@@ -47,6 +47,12 @@ describe("basic machine function", () => {
     expect(machine.transitioning?.[1]).toContain('error')
     expect(machine.transitioning?.[1]).toContain('success')
 
+    expect(machine.transitioningFrom('idle')).toBeTruthy()
+    expect(machine.transitioningFrom(['idle', 'error'])).toBeTruthy()
+    expect(machine.transitioningTo('error')).toBeTruthy()
+    expect(machine.transitioningTo('success')).toBeTruthy()
+    expect(machine.transitioningTo(['success', 'error'])).toBeTruthy()
+
     await transition
     expect(machine.currentStage.stage).toBe('success')
     expect(machine.transitioning).toBeUndefined()
@@ -55,7 +61,7 @@ describe("basic machine function", () => {
 
     expect(mockEventListener).toBeCalledTimes(1)
     mockContextFn.mockRejectedValueOnce(new Error('hello'))
-    
+
     transition = machine.dispatch('init')
     await transition
 

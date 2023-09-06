@@ -9,6 +9,7 @@
     "standard-version": "^9.5.0",
     "tsup": "^7.2.0",
     "typescript": "^5.2.2",
+    "valtio": "^1.11.2",
     "vitest": "^0.34.3"
   },
   "dependencies": {
@@ -34,5 +35,8 @@
     "sourcemap": true,
     "clean": true,
     "dts": true
+  },
+  "peerDependencies": {
+    "valtio": "*"
   }
 }

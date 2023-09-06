@@ -1,4 +1,5 @@
 import { createRouter } from "radix3"
+import { proxy, snapshot } from "valtio/vanilla"
 
 export type StagesDef<Stage, Event, Context> = {
   stage: Stage
@@ -31,7 +32,9 @@ type Stager<
   T extends TransitionInstance<S, any>
 > = {
   currentStage: S
-  transitioning: [from: S['stage'], to: S['stage']] | undefined
+  transitioning: [from: S['stage'], to: Array<S['stage']>] | undefined
+  transitioningTo: (to: valueOrArrayValue<S['stage']>) => boolean
+  transitioningFrom: (from: valueOrArrayValue<S['stage']>) => boolean
   on: <X extends valueOrArrayValue<S['stage']>>(stage: X, cb: (stage: Extract<S, { stage: inferValueOrArrayValue<X> }>) => (void | Promise<void>)) => void
   dispatch: <N extends T['name'] | [S['stage'], S['stage']]>(
     ...params: [
@@ -41,6 +44,7 @@ type Stager<
       : any
     ]
   ) => Promise<void>
+  reset: () => void
 }
 
 type TransitionInstance<
@@ -109,18 +113,23 @@ class StageBuilder<
   }: StagerOptions & {
     initialStage: S
   }): Stager<S, T> {
-    const transitionRouter = createRouter<TransitionInstance<S, Stager<S, T>>>()
-    for (const transition of this.transitions) {
-      const froms = Array.isArray(transition.from) ? transition.from : [transition.from]
-      const tos = Array.isArray(transition.to) ? transition.to : [transition.to]
-      transitionRouter.insert(`/event/${transition.name}`, transition)
-
-      for (const from of froms) {
-        for (const to of tos) {
-          transitionRouter.insert(`/route/${from}/${to}`, transition)
+    const startPoint = proxy(initialStage)
+    let transitionRouter = createRouter<TransitionInstance<S, Stager<S, T>>>()
+    const registerTransitions = () => {
+      for (const transition of this.transitions) {
+        const froms = Array.isArray(transition.from) ? transition.from : [transition.from]
+        const tos = Array.isArray(transition.to) ? transition.to : [transition.to]
+        transitionRouter.insert(`/event/${transition.name}`, transition)
+  
+        for (const from of froms) {
+          for (const to of tos) {
+            transitionRouter.insert(`/route/${from}/${to}`, transition)
+          }
         }
       }
     }
+
+    registerTransitions()
 
     const registerListener = (register: StageListener<S>) => {
       for (const stage of register.stage) {
@@ -134,19 +143,25 @@ class StageBuilder<
       }
     }
 
-    const listenerRouters = createRouter<Set<StageListener<S>>>()
-    for (const listenerRegister of this.listeners) {
-      registerListener(listenerRegister)
+    let listenerRouters = createRouter<Set<StageListener<S>>>()
+    const registerListeners = () => {
+      for (const listenerRegister of this.listeners) {
+        registerListener(listenerRegister)
+      }
     }
+
+    registerListeners()
 
     const triggerStageChanges = (nextStage: S) => {
       if (nextStage.stage !== stager.currentStage.stage) {
-        stager.currentStage = nextStage
+        stager.currentStage.context = nextStage.context
+        stager.currentStage.stage = nextStage.stage
+
         const matches = listenerRouters.lookup(`/listen/${nextStage.stage}`)
         
         if (matches) {
           matches.forEach(({ listener }) => {
-            listener(stager.currentStage)
+            listener(snapshot(stager.currentStage) as any)
           })
         }
 
@@ -155,11 +170,33 @@ class StageBuilder<
       }
     }
 
-    // add transitions to listener
-    // add ons to listener
     const stager: Stager<S, T> = {
-      currentStage: initialStage,
+      currentStage: startPoint,
       transitioning: undefined,
+      transitioningTo(to) {
+        if (stager.transitioning === undefined) return false
+        
+        const targetTo: string[] = Array.isArray(to)
+          ? to
+          : [to]
+        return !!targetTo.find(to => stager.transitioning?.[1].includes(to))
+      },
+      transitioningFrom(from) {
+        if (stager.transitioning === undefined) return false
+        const targetFrom: string[] = Array.isArray(from)
+          ? from
+          : [from]
+
+          return targetFrom.includes(stager.currentStage.stage)
+      },
+      reset: () => {
+        stager.currentStage = proxy(initialStage)
+        transitionRouter = createRouter<TransitionInstance<S, Stager<S, T>>>()
+        registerTransitions()
+
+        listenerRouters = createRouter<Set<StageListener<S>>>()
+        registerListeners()
+      },
       async dispatch(name, ...params) {
         let transition: TransitionInstance<S, Stager<S, T>> | null
 
@@ -175,30 +212,27 @@ class StageBuilder<
           return
         }
 
-        // from must contain currentStage
-        if (Array.isArray(transition.from)) {
-          if(!transition.from.includes(stager.currentStage.stage)) {
-            console.log(`from condition doesn't match`, transition.from, stager.currentStage.stage)
-            return
-          }
-        } else if (transition.from !== stager.currentStage.stage) {
-          console.log(`> from condition doesn't match`, transition.from, stager.currentStage.stage)
+        const targetFrom: string[] = Array.isArray(transition.from)
+          ? transition.from
+          : [transition.from]
+
+        const targetTo: string[] = Array.isArray(transition.to)
+          ? transition.to
+          : [transition.to]
+
+        if (!targetFrom.includes(stager.currentStage.stage)) {
+          console.log(`from condition doesn't match`, transition.from, stager.currentStage.stage)
           return
         }
 
-        if (Array.isArray(transition.to)) {
-          if (!transition.to.find(to => transitionRouter.lookup(`/route/${stager.currentStage.stage}/${to}`))) {
-            console.log(`to condition doesn't match`, transition.to)
-            return
-          }
-        } else if (transitionRouter.lookup(`/route/${stager.currentStage.stage}/${transition.to}`)) {
-          console.log(`to condition doesn't match`)
+        if (!targetTo.find(to => transitionRouter.lookup(`/route/${stager.currentStage.stage}/${to}`))) {
+          console.log(`to condition doesn't match`, transition.to)
           return
         }
 
-        stager.transitioning = [transition.from, transition.to]
+        stager.transitioning = [stager.currentStage.stage, targetTo]
         const transitionResult: S | undefined | Promise<S | undefined> = transition.execution.apply(undefined, [{
-          stage: stager.currentStage,
+          stage: snapshot(stager.currentStage),
           dispatch: stager.dispatch
         }, ...params])
 
