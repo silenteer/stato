@@ -6,6 +6,8 @@
   "author": "Lagz0ne <duke@silentium.io>",
   "devDependencies": {
     "@types/react": "^18.2.20",
+    "@types/ungap__structured-clone": "^0.3.0",
+    "react": "^18.2.0",
     "standard-version": "^9.5.0",
     "tsup": "^7.2.0",
     "typescript": "^5.2.2",
@@ -13,6 +15,7 @@
     "vitest": "^0.34.3"
   },
   "dependencies": {
+    "@ungap/structured-clone": "^1.2.0",
     "radix3": "^1.1.0"
   },
   "scripts": {
@@ -37,6 +40,7 @@
     "dts": true
   },
   "peerDependencies": {
+    "react": "*",
     "valtio": "*"
   }
 }

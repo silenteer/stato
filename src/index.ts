@@ -1,5 +1,6 @@
 import { createRouter } from "radix3"
-import { proxy, snapshot } from "valtio/vanilla"
+import { proxy, useSnapshot } from "valtio"
+import structuredClone from "@ungap/structured-clone"
 
 export type StagesDef<Stage, Event, Context> = {
   stage: Stage
@@ -45,6 +46,7 @@ type Stager<
     ]
   ) => Promise<void>
   reset: () => void
+  useStage: (filter?: (stage: S) => any) => ReturnType<typeof useSnapshot>
 }
 
 type TransitionInstance<
@@ -161,7 +163,7 @@ class StageBuilder<
         
         if (matches) {
           matches.forEach(({ listener }) => {
-            listener(snapshot(stager.currentStage) as any)
+            listener(stager.currentStage)
           })
         }
 
@@ -232,7 +234,7 @@ class StageBuilder<
 
         stager.transitioning = [stager.currentStage.stage, targetTo]
         const transitionResult: S | undefined | Promise<S | undefined> = transition.execution.apply(undefined, [{
-          stage: snapshot(stager.currentStage),
+          stage: stager.currentStage,
           dispatch: stager.dispatch
         }, ...params])
 
@@ -257,6 +259,14 @@ class StageBuilder<
       on(stage, cb) {
         const names = typeof stage === 'string' ? [stage] : [...stage]
         registerListener({ stage, listener: cb})
+      },
+      useStage(filter) {
+        let target = stager.currentStage
+        if (filter) {
+          target = filter(target)
+        }
+
+        return useSnapshot(target)
       },
     }
 

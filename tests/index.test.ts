@@ -1,4 +1,4 @@
-import { assert, describe, expect, test, vi } from "vitest"
+import { assert, beforeEach, describe, expect, test, vi } from "vitest"
 import { Stage, create } from "../src"
 
 describe("basic machine function", () => {
@@ -38,6 +38,8 @@ describe("basic machine function", () => {
   const machine = x.build({
     initialStage: { stage: 'idle', context: { promise: mockContextFn } }
   })
+
+  beforeEach(() => { mockContextFn.mockReset()})
 
   test('expect machine to function', async () => {
     expect(machine.currentStage.stage).toBe('idle')
