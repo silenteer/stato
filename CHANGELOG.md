@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.1.0](https://github.com/silenteer/use-stage/compare/use-stager1.0.1...use-stager1.1.0) (2023-09-06)
+
+
+### Features
+
+* added valtio, transitioning APIs ([3da3111](https://github.com/silenteer/use-stage/commit/3da311175bbc5007a9a4f2c8a7437d5796838a1d))
+
 ### 1.0.1 (2023-09-05)
 
 
