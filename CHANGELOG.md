@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.2.0](https://github.com/silenteer/use-stage/compare/use-stager1.1.0...use-stager1.2.0) (2023-09-06)
+
+
+### Features
+
+* expose react-related stuff ([582fe5c](https://github.com/silenteer/use-stage/commit/582fe5c0c5d0e0545ad5e617963ea0e4c7cb6a3e))
+
 ## [1.1.0](https://github.com/silenteer/use-stage/compare/use-stager1.0.1...use-stager1.1.0) (2023-09-06)
 
 
