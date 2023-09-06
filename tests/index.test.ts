@@ -11,7 +11,7 @@ describe("basic machine function", () => {
   const mockContextFn = vi.fn(async () => '1234')
   const mockEventListener = vi.fn()
 
-  const x = create<Stages>()
+  const builder = create<Stages>()
     .transition({
       name: 'init',
       from: ['idle', 'error', 'success'],
@@ -35,16 +35,21 @@ describe("basic machine function", () => {
     })
     .on(['success', 'error'], mockEventListener)
 
-  const machine = x.build({
+  let machine = builder.build({
     initialStage: { stage: 'idle', context: { promise: mockContextFn } }
   })
 
-  beforeEach(() => { mockContextFn.mockReset()})
+  beforeEach(() => { 
+    vi.resetAllMocks()
+    machine.reset()
+    builder.build({
+      initialStage: { stage: 'idle', context: { promise: mockContextFn } }
+    })
+  })
 
   test('expect machine to function', async () => {
     expect(machine.currentStage.stage).toBe('idle')
     let transition = machine.dispatch('init')
-    console.log(machine.transitioning)
     expect(machine.transitioning?.[0]).toContain('idle')
     expect(machine.transitioning?.[1]).toContain('error')
     expect(machine.transitioning?.[1]).toContain('success')
@@ -68,7 +73,25 @@ describe("basic machine function", () => {
     await transition
 
     expect(machine.currentStage.stage).toBe('error')
+  })
 
+  test('maybe no side effect', async () => {
+    const sideEffectListener = vi.fn()
+
+    builder.on('success', sideEffectListener)
+    await machine.dispatch('init')
+
+    expect(sideEffectListener).toBeCalledTimes(0)
+
+    const machine2 = builder.build({ initialStage: { stage: 'idle', context: { promise: async () => '123'}}})
+    await machine2.dispatch('init')
+    expect(sideEffectListener).toBeCalledTimes(1)
+  })
+
+  test('we can reset machine', async () => {
+    await machine.dispatch('init')
+    machine.reset()
+    expect(machine.currentStage.stage).toBe('idle')
   })
 })
 

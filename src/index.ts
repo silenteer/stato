@@ -1,6 +1,7 @@
 import { createRouter } from "radix3"
 import { proxy, useSnapshot } from "valtio"
-import { useEffect } from "react"
+import { createContext, useEffect } from "react"
+import cloneDeep from "lodash.clonedeep"
 
 export type StagesDef<Stage, Event, Context> = {
   stage: Stage
@@ -48,6 +49,7 @@ type Stager<
   reset: () => void
   useStage: (filter?: (stage: S) => any) => ReturnType<typeof useSnapshot<S>>
   useListen: Stager<S, T>['on']
+  useLifecycle: () => void
 }
 
 type TransitionInstance<
@@ -98,7 +100,6 @@ class StageBuilder<
     option: TransitionInstance<S, Stager<S, T>, Event, From, To, P>
   ): StageBuilder<S, T | TransitionInstance<S, Stager<S, T>, Event, From, To, P>> {
     this.transitions.push(option)
-
     return this as any
   }
 
@@ -116,10 +117,13 @@ class StageBuilder<
   }: StagerOptions & {
     initialStage: S
   }): Stager<S, T> {
-    const startPoint = proxy(initialStage)
+    const startPoint = proxy(cloneDeep(initialStage))
+    let transitions = [...this.transitions]
+    let listeners = [...this.listeners]
+
     let transitionRouter = createRouter<TransitionInstance<S, Stager<S, T>>>()
     const registerTransitions = () => {
-      for (const transition of this.transitions) {
+      for (const transition of transitions) {
         const froms = Array.isArray(transition.from) ? transition.from : [transition.from]
         const tos = Array.isArray(transition.to) ? transition.to : [transition.to]
         transitionRouter.insert(`/event/${transition.name}`, transition)
@@ -163,7 +167,7 @@ class StageBuilder<
 
     let listenerRouters = createRouter<Set<StageListener<S>>>()
     const registerListeners = () => {
-      for (const listenerRegister of this.listeners) {
+      for (const listenerRegister of listeners) {
         registerListener(listenerRegister)
       }
     }
@@ -208,7 +212,7 @@ class StageBuilder<
           return targetFrom.includes(stager.currentStage.stage)
       },
       reset: () => {
-        stager.currentStage = proxy(initialStage)
+        stager.currentStage = proxy(cloneDeep(initialStage))
         transitionRouter = createRouter<TransitionInstance<S, Stager<S, T>>>()
         registerTransitions()
 
@@ -290,8 +294,14 @@ class StageBuilder<
         useEffect(() => {
           return registerListener({ stage: names, listener: cb })
         }, [])
+      },
+      useLifecycle() {
+        stager.reset()
+        useEffect(() => stager.reset, [])
       }
     }
+
+    const reactContext = createContext<Stager<S,T>>(stager)
 
     return stager
   }
