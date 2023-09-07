@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.6.0](https://github.com/silenteer/use-stage/compare/use-stager1.5.3...use-stager1.6.0) (2023-09-07)
+
+
+### Features
+
+* added transition tracking ([04ee2b5](https://github.com/silenteer/use-stage/commit/04ee2b54ec4ee591196bc0e19e2e56cb04aa3b3e))
+
 ### [1.5.3](https://github.com/silenteer/use-stage/compare/use-stager1.5.2...use-stager1.5.3) (2023-09-07)
 
 ### [1.5.2](https://github.com/silenteer/use-stage/compare/use-stager1.5.1...use-stager1.5.2) (2023-09-07)
