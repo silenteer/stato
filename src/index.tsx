@@ -56,8 +56,8 @@ type Stager<
   withStager: <T extends { key?: string | number | null | undefined }>(Component: ComponentType<T>) => ComponentType<T>
   Stage: <N extends S['stage']>(props: {
     stage: N
-    children: ExoticComponent<Extract<S, { stage: N }>>
-  }) => ReactNode
+    children: (props: Extract<S, {stage: N}> & { transition: Stager<S, T>['transition'] }) => (React.JSX.Element | null | undefined)
+  }) => (React.JSX.Element | null | undefined)
 }
 
 type TransitionInstance<
