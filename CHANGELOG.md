@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.5.1](https://github.com/silenteer/use-stage/compare/use-stager1.5.0...use-stager1.5.1) (2023-09-07)
+
+
+### Bug Fixes
+
+* corrected calling useEffect position ([2b8d7f4](https://github.com/silenteer/use-stage/commit/2b8d7f4a2098c12255dfe5d2772c357f85886d68))
+
 ## [1.5.0](https://github.com/silenteer/use-stage/compare/use-stager1.4.0...use-stager1.5.0) (2023-09-07)
 
 
