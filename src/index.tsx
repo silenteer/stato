@@ -352,10 +352,10 @@ class StageBuilder<
 
         if (stager.currentStage.stage !== stage) return null
 
-        else return children({
+        else return children(useSnapshot({
           transition: stager.transition,
           ...stager.currentStage
-        } as any)
+        }) as any)
       }
     }
 
