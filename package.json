@@ -1,7 +1,7 @@
 {
   "name": "use-stager",
   "packageManager": "yarn@3.5.0",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "description": "Maybe a simpler all-purpose (but mostly frontend) state machine",
   "author": "Lagz0ne <duke@silentium.io>",
   "devDependencies": {
@@ -23,7 +23,7 @@
     "test": "vitest run",
     "build": "yarn run tsup",
     "preview": "yarn run standard-version --path . --dry-run -t use-stager",
-    "bump": "yarn run standard-version --path . -t use-stager",
+    "bump": "yarn build && yarn run standard-version --path . -t use-stager",
     "release": "git push --follow-tags origin master && npm publish --access public"
   },
   "main": "dist/index.js",
