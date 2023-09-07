@@ -1,7 +1,7 @@
 {
   "name": "use-stager",
   "packageManager": "yarn@3.5.0",
-  "version": "1.6.4",
+  "version": "1.6.5",
   "description": "Maybe a simpler all-purpose (but mostly frontend) state machine",
   "author": "Lagz0ne <duke@silentium.io>",
   "devDependencies": {
