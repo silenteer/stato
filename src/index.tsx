@@ -93,7 +93,6 @@ class StageBuilder<
 > {
   transitions: Array<TransitionInstance<S, any>> = []
   listeners: Array<StageListener<S, T>> = []
-  stager: Stager<S, T>
 
   transition<
     Event extends string,
@@ -102,9 +101,9 @@ class StageBuilder<
     P extends unknown[]
   >(
     option: TransitionInstance<S, Stager<S, T>, Event, From, To, P>
-  ): asserts this is StageBuilder<S, T | TransitionInstance<S, Stager<S, T>, Event, From, To, P>> {
+  ) {
     this.transitions.push(option)
-    return this as any
+    return this as StageBuilder<S, T | TransitionInstance<S, Stager<S, T>, Event, From, To, P>>
   }
 
   on<N extends valueOrArrayValue<S['stage']>>(
