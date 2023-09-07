@@ -1,6 +1,6 @@
 import { createRouter } from "radix3"
 import { proxy, useSnapshot } from "valtio"
-import React, { ComponentType, createContext, useContext, useEffect } from "react"
+import React, { ComponentType, ExoticComponent, ReactNode, createContext, useContext, useEffect } from "react"
 import cloneDeep from "lodash.clonedeep"
 
 export type StagesDef<Stage, Event, Context> = {
@@ -54,6 +54,10 @@ type Stager<
   useTransition: () => ReturnType<typeof useSnapshot<Stager<S, T>['transition']>>
   useListen: Stager<S, T>['on']
   withStager: <T extends { key?: string | number | null | undefined }>(Component: ComponentType<T>) => ComponentType<T>
+  Stage: <N extends S['stage']>(props: {
+    stage: N
+    children: ExoticComponent<Extract<S, { stage: N }>>
+  }) => ReactNode
 }
 
 type TransitionInstance<
@@ -338,6 +342,17 @@ class StageBuilder<
         }
 
         return useSnapshot(stager.transition)
+      },
+      Stage: ({ stage, children }) => {
+        const stager = useContext(reactContext)
+
+        if (!stager) {
+          throw new Error('stage context must be used within `withStager`')
+        }
+
+        if (stager.currentStage.stage !== stage) return null
+
+        else return children(stager.currentStage as any)
       }
     }
 
