@@ -35,6 +35,7 @@ type Stager<
 > = {
   currentStage: S
   transition: {
+    isTransitioning: boolean
     transitioning: [from: S['stage'], to: Array<S['stage']>] | undefined
     transitioningTo: (to: valueOrArrayValue<S['stage']>) => boolean
     transitioningFrom: (from: valueOrArrayValue<S['stage']>) => boolean
@@ -205,6 +206,7 @@ class StageBuilder<
     const stager: Stager<S, T> = {
       currentStage: startPoint,
       transition: proxy({
+        isTransitioning: false,
         transitioning: undefined,
         transitioningTo(to) {
           if (stager.transition.transitioning === undefined) return false
@@ -269,6 +271,7 @@ class StageBuilder<
         }
 
         stager.transition.transitioning = [stager.currentStage.stage, targetTo]
+        stager.transition.isTransitioning = stager.transition.transitioning !== undefined
         const transitionResult: S | undefined | Promise<S | undefined> = transition.execution.apply(undefined, [{
           ...stager.currentStage,
           dispatch: stager.dispatch
@@ -279,14 +282,17 @@ class StageBuilder<
             .then((result: S | undefined) => {
               if (result) {
                 stager.transition.transitioning = undefined
+                stager.transition.isTransitioning = stager.transition.transitioning !== undefined
                 triggerStageChanges(result)
               }
             })
             .finally(() => {
               stager.transition.transitioning = undefined
+              stager.transition.isTransitioning = stager.transition.transitioning !== undefined
             })
         } else {
           stager.transition.transitioning = undefined
+          stager.transition.isTransitioning = stager.transition.transitioning !== undefined
           if (transitionResult) {
             triggerStageChanges(transitionResult)
           }
