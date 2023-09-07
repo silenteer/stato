@@ -50,19 +50,19 @@ describe("basic machine function", () => {
   test('expect machine to function', async () => {
     expect(machine.currentStage.stage).toBe('idle')
     let transition = machine.dispatch('init')
-    expect(machine.transitioning?.[0]).toContain('idle')
-    expect(machine.transitioning?.[1]).toContain('error')
-    expect(machine.transitioning?.[1]).toContain('success')
+    expect(machine.transition.transitioning?.[0]).toContain('idle')
+    expect(machine.transition.transitioning?.[1]).toContain('error')
+    expect(machine.transition.transitioning?.[1]).toContain('success')
 
-    expect(machine.transitioningFrom('idle')).toBeTruthy()
-    expect(machine.transitioningFrom(['idle', 'error'])).toBeTruthy()
-    expect(machine.transitioningTo('error')).toBeTruthy()
-    expect(machine.transitioningTo('success')).toBeTruthy()
-    expect(machine.transitioningTo(['success', 'error'])).toBeTruthy()
+    expect(machine.transition.transitioningFrom('idle')).toBeTruthy()
+    expect(machine.transition.transitioningFrom(['idle', 'error'])).toBeTruthy()
+    expect(machine.transition.transitioningTo('error')).toBeTruthy()
+    expect(machine.transition.transitioningTo('success')).toBeTruthy()
+    expect(machine.transition.transitioningTo(['success', 'error'])).toBeTruthy()
 
     await transition
     expect(machine.currentStage.stage).toBe('success')
-    expect(machine.transitioning).toBeUndefined()
+    expect(machine.transition.transitioning).toBeUndefined()
 
     expect(machine.currentStage.stage === 'success' && machine.currentStage.context.result === '1234')
 

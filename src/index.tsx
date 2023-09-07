@@ -34,9 +34,11 @@ type Stager<
   T extends TransitionInstance<S, any>
 > = {
   currentStage: S
-  transitioning: [from: S['stage'], to: Array<S['stage']>] | undefined
-  transitioningTo: (to: valueOrArrayValue<S['stage']>) => boolean
-  transitioningFrom: (from: valueOrArrayValue<S['stage']>) => boolean
+  transition: {
+    transitioning: [from: S['stage'], to: Array<S['stage']>] | undefined
+    transitioningTo: (to: valueOrArrayValue<S['stage']>) => boolean
+    transitioningFrom: (from: valueOrArrayValue<S['stage']>) => boolean
+  }
   on: <X extends valueOrArrayValue<S['stage']>>(stage: X, cb: (stage: Extract<S, { stage: inferValueOrArrayValue<X> }>) => (void | Promise<void>)) => void
   dispatch: <N extends T['name'] | [S['stage'], S['stage']]>(
     ...params: [
@@ -47,7 +49,8 @@ type Stager<
     ]
   ) => Promise<void>
   reset: () => void
-  useStage: (filter?: (stage: S) => any) => ReturnType<typeof useSnapshot<S>>
+  useStage: () => ReturnType<typeof useSnapshot<S>>
+  useTransition: () => ReturnType<typeof useSnapshot<Stager<S, T>['transition']>>
   useListen: Stager<S, T>['on']
   withStager: <T extends React.JSX.IntrinsicAttributes>(Component: ComponentType<T>) => ComponentType<T>
 }
@@ -201,25 +204,29 @@ class StageBuilder<
 
     const stager: Stager<S, T> = {
       currentStage: startPoint,
-      transitioning: undefined,
-      transitioningTo(to) {
-        if (stager.transitioning === undefined) return false
-
-        const targetTo: string[] = Array.isArray(to)
-          ? to
-          : [to]
-        return !!targetTo.find(to => stager.transitioning?.[1].includes(to))
-      },
-      transitioningFrom(from) {
-        if (stager.transitioning === undefined) return false
-        const targetFrom: string[] = Array.isArray(from)
-          ? from
-          : [from]
-
-        return targetFrom.includes(stager.currentStage.stage)
-      },
+      transition: proxy({
+        transitioning: undefined,
+        transitioningTo(to) {
+          if (stager.transition.transitioning === undefined) return false
+  
+          const targetTo: string[] = Array.isArray(to)
+            ? to
+            : [to]
+          return !!targetTo.find(to => stager.transition.transitioning?.[1].includes(to))
+        },
+        transitioningFrom(from) {
+          if (stager.transition.transitioning === undefined) return false
+          const targetFrom: string[] = Array.isArray(from)
+            ? from
+            : [from]
+  
+          return targetFrom.includes(stager.currentStage.stage)
+        },
+      }),
       reset: () => {
         stager.currentStage = proxy(cloneDeep(initialStage))
+
+        stager.transition.transitioning = undefined
         transitionRouter = createRouter<TransitionInstance<S, Stager<S, T>>>()
         registerTransitions()
 
@@ -261,7 +268,7 @@ class StageBuilder<
           return
         }
 
-        stager.transitioning = [stager.currentStage.stage, targetTo]
+        stager.transition.transitioning = [stager.currentStage.stage, targetTo]
         const transitionResult: S | undefined | Promise<S | undefined> = transition.execution.apply(undefined, [{
           ...stager.currentStage,
           dispatch: stager.dispatch
@@ -271,15 +278,15 @@ class StageBuilder<
           await transitionResult
             .then((result: S | undefined) => {
               if (result) {
-                stager.transitioning = undefined
+                stager.transition.transitioning = undefined
                 triggerStageChanges(result)
               }
             })
             .finally(() => {
-              stager.transitioning = undefined
+              stager.transition.transitioning = undefined
             })
         } else {
-          stager.transitioning = undefined
+          stager.transition.transitioning = undefined
           if (transitionResult) {
             triggerStageChanges(transitionResult)
           }
@@ -288,6 +295,19 @@ class StageBuilder<
       on(stage, cb) {
         const names = typeof stage === 'string' ? [stage] : stage
         return registerListener({ stage: names, listener: cb })
+      },
+      withStager(Component) {
+        return (props) => {
+          useEffect(() => {
+            return () => stager.reset()
+          }, [])
+
+          return (
+            <reactContext.Provider value={stager}>
+              <Component {...props} />
+            </reactContext.Provider>
+          )
+        }
       },
       useStage() {
         const stager = useContext(reactContext)
@@ -305,18 +325,14 @@ class StageBuilder<
           return registerListener({ stage: names, listener: cb })
         }, [])
       },
-      withStager(Component) {
-        return (props) => {
-          useEffect(() => {
-            return () => stager.reset()
-          }, [])
+      useTransition() {
+        const stager = useContext(reactContext)
 
-          return (
-            <reactContext.Provider value={stager}>
-              <Component {...props} />
-            </reactContext.Provider>
-          )
+        if (!stager) {
+          throw new Error('stage context must be used within `withStager`')
         }
+
+        return useSnapshot(stager.transition)
       }
     }
 
