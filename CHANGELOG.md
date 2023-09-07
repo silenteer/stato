@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.6.6](https://github.com/silenteer/use-stage/compare/use-stager1.6.5...use-stager1.6.6) (2023-09-07)
+
+
+### Features
+
+* trial Stage element ([299d135](https://github.com/silenteer/use-stage/commit/299d135e86e5344390d8ccbcc1acbc39eb893a44))
+
 ### [1.6.5](https://github.com/silenteer/use-stage/compare/use-stager1.6.4...use-stager1.6.5) (2023-09-07)
 
 ### [1.6.4](https://github.com/silenteer/use-stage/compare/use-stager1.6.3...use-stager1.6.4) (2023-09-07)
