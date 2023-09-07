@@ -56,8 +56,8 @@ type Stager<
   withStager: <T extends { key?: string | number | null | undefined }>(Component: ComponentType<T>) => ComponentType<T>
   Stage: <N extends S['stage']>(props: {
     stage: N
-    children: (props: Extract<S, {stage: N}> & { transition: Stager<S, T>['transition'] }) => (React.JSX.Element | null | undefined)
-  }) => (React.JSX.Element | null | undefined)
+    children: (props: Extract<S, {stage: N}> & { transition: Stager<S, T>['transition'] }) => (React.JSX.Element | null)
+  }) => (React.JSX.Element | null)
 }
 
 type TransitionInstance<
@@ -352,7 +352,10 @@ class StageBuilder<
 
         if (stager.currentStage.stage !== stage) return null
 
-        else return children(stager.currentStage as any)
+        else return children({
+          transition: stager.transition,
+          ...stager.currentStage
+        } as any)
       }
     }
 
