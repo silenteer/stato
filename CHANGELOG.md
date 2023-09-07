@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.6.8](https://github.com/silenteer/use-stage/compare/use-stager1.6.7...use-stager1.6.8) (2023-09-07)
+
+
+### Bug Fixes
+
+* unnecessary undefined ([4fe8504](https://github.com/silenteer/use-stage/commit/4fe85045c232e3eb24b7eb620ab508b2592e19cd))
+
 ### [1.6.7](https://github.com/silenteer/use-stage/compare/use-stager1.6.6...use-stager1.6.7) (2023-09-07)
 
 
