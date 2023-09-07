@@ -1,6 +1,6 @@
 import { createRouter } from "radix3"
 import { proxy, useSnapshot } from "valtio"
-import { createContext, useEffect } from "react"
+import React, { ComponentType, createContext, useContext, useEffect } from "react"
 import cloneDeep from "lodash.clonedeep"
 
 export type StagesDef<Stage, Event, Context> = {
@@ -49,7 +49,7 @@ type Stager<
   reset: () => void
   useStage: (filter?: (stage: S) => any) => ReturnType<typeof useSnapshot<S>>
   useListen: Stager<S, T>['on']
-  useLifecycle: () => void
+  withStager: <T extends React.JSX.IntrinsicAttributes>(Component: ComponentType<T>) => ComponentType<T>
 }
 
 type TransitionInstance<
@@ -64,8 +64,7 @@ type TransitionInstance<
   from: From
   to: To
   execution: (
-    executionCtx: {
-      stage: Extract<Stages, { stage: inferValueOrArrayValue<From> }>,
+    executionCtx: Extract<Stages, { stage: inferValueOrArrayValue<From> }> & {
       dispatch: S['dispatch']
     },
     ...params: Params
@@ -73,10 +72,11 @@ type TransitionInstance<
 }
 
 type StageListener<
-  Stages extends StageDef
+  Stages extends StageDef,
+  T extends TransitionInstance<Stages, Stager<any, any>>
 > = {
   stage: valueOrArrayValue<Stages['stage']>
-  listener: (stage: Stages) => (void | Promise<void>)
+  listener: (stage: Stages, dispatch: Stager<Stages, T>['dispatch']) => (void | Promise<void>)
 }
 
 function isPromise(value: any): value is Promise<any> {
@@ -88,7 +88,7 @@ class StageBuilder<
   T extends TransitionInstance<S, Stager<any, any>> = NoTransition
 > {
   transitions: Array<TransitionInstance<S, any>> = []
-  listeners: Array<StageListener<S>> = []
+  listeners: Array<StageListener<S, T>> = []
   stager: Stager<S, T>
 
   transition<
@@ -105,7 +105,10 @@ class StageBuilder<
 
   on<N extends valueOrArrayValue<S['stage']>>(
     name: N,
-    listener: (stage: Extract<S, { stage: inferValueOrArrayValue<N> }>) => (void | Promise<void>)
+    listener: (
+      stage: Extract<S, { stage: inferValueOrArrayValue<N> }>,
+      dispatch: Stager<S, T>['dispatch']  
+    ) => (void | Promise<void>)
   ): StageBuilder<S, T> {
     const names = typeof name === 'string' ? [name] : [...name]
     this.listeners.push({ stage: names, listener })
@@ -138,7 +141,7 @@ class StageBuilder<
 
     registerTransitions()
 
-    const registerListener = (register: StageListener<S>) => {
+    const registerListener = (register: StageListener<S, T>) => {
       for (const stage of register.stage) {
         let container = listenerRouters.lookup(`/listen/${stage}`)
         if (!container) {
@@ -152,7 +155,7 @@ class StageBuilder<
       return () => unregisterListener(register)
     }
 
-    const unregisterListener = (register: StageListener<S>) => {
+    const unregisterListener = (register: StageListener<S, T>) => {
       for (const stage of register.stage) {
         let container = listenerRouters.lookup(`/listen/${stage}`)
         if (container) {
@@ -165,7 +168,7 @@ class StageBuilder<
       }
     }
 
-    let listenerRouters = createRouter<Set<StageListener<S>>>()
+    let listenerRouters = createRouter<Set<StageListener<S, T>>>()
     const registerListeners = () => {
       for (const listenerRegister of listeners) {
         registerListener(listenerRegister)
@@ -174,18 +177,22 @@ class StageBuilder<
 
     registerListeners()
 
+    const triggerEventListeners = async (stage: S['stage']) => {
+      const matches = listenerRouters.lookup(`/listen/${stage}`)
+        
+      if (matches) {
+        for (const { listener } of matches) {
+          await listener(stager.currentStage, stager.dispatch)
+        }
+      }
+    }
+
     const triggerStageChanges = (nextStage: S) => {
       if (nextStage.stage !== stager.currentStage.stage) {
         stager.currentStage.context = nextStage.context
         stager.currentStage.stage = nextStage.stage
 
-        const matches = listenerRouters.lookup(`/listen/${nextStage.stage}`)
-        
-        if (matches) {
-          matches.forEach(({ listener }) => {
-            listener(stager.currentStage)
-          })
-        }
+        triggerEventListeners(nextStage.stage)
 
       } else {
         stager.currentStage.context = nextStage.context
@@ -216,8 +223,10 @@ class StageBuilder<
         transitionRouter = createRouter<TransitionInstance<S, Stager<S, T>>>()
         registerTransitions()
 
-        listenerRouters = createRouter<Set<StageListener<S>>>()
+        listenerRouters = createRouter<Set<StageListener<S, T>>>()
         registerListeners()
+
+        triggerStageChanges(stager.currentStage)
       },
       async dispatch(name, ...params) {
         let transition: TransitionInstance<S, Stager<S, T>> | null
@@ -254,7 +263,7 @@ class StageBuilder<
 
         stager.transitioning = [stager.currentStage.stage, targetTo]
         const transitionResult: S | undefined | Promise<S | undefined> = transition.execution.apply(undefined, [{
-          stage: stager.currentStage,
+          ...stager.currentStage,
           dispatch: stager.dispatch
         }, ...params])
 
@@ -280,13 +289,14 @@ class StageBuilder<
         const names = typeof stage === 'string' ? [stage] : stage
         return registerListener({ stage: names, listener: cb})
       },
-      useStage(filter) {
-        let target = stager.currentStage
-        if (filter) {
-          target = filter(target)
-        }
+      useStage() {
+        const stager = useContext(reactContext)
 
-        return useSnapshot(target)
+        if (!stager) {
+          throw new Error('stage context must be used within `withStager`')
+        }
+        
+        return useSnapshot(stager.currentStage)
       },
       useListen(stage, cb) {
         const names = typeof stage === 'string' ? [stage] : stage
@@ -295,20 +305,24 @@ class StageBuilder<
           return registerListener({ stage: names, listener: cb })
         }, [])
       },
-      useLifecycle() {
-        stager.reset()
-        useEffect(() => stager.reset, [])
+      withStager(Component) {
+        useEffect(() => {
+          return () => stager.reset()
+        }, [])
+
+        return (props) => <reactContext.Provider value={stager}>
+          <Component {...props}/>
+        </reactContext.Provider>
       }
     }
 
-    const reactContext = createContext<Stager<S,T>>(stager)
+    const reactContext = createContext<Stager<S,T> | undefined>(undefined)
+    triggerEventListeners(stager.currentStage.stage)
 
     return stager
   }
 }
 
-type StagerOptions = {
-
-}
+type StagerOptions = {}
 
 export const create = <S extends StageDef>() => new StageBuilder<S>()

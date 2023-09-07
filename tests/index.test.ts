@@ -1,4 +1,4 @@
-import { assert, beforeEach, describe, expect, test, vi } from "vitest"
+import { beforeEach, describe, expect, test, vi } from "vitest"
 import { Stage, create } from "../src"
 
 describe("basic machine function", () => {
@@ -16,12 +16,12 @@ describe("basic machine function", () => {
       name: 'init',
       from: ['idle', 'error', 'success'],
       to: ['error', 'success'],
-      async execution({ stage }) {
+      async execution({ context }) {
         try {
-          const result = await stage.context.promise()
-          return { stage: 'success', context: {...stage.context, result }}
+          const result = await context.promise()
+          return { stage: 'success', context: {...context, result }}
         } catch(e) {
-          return {stage: 'error', context: { ...stage.context, error: e}}
+          return {stage: 'error', context: { ...context, error: e}}
         }
       }
     })
@@ -29,11 +29,11 @@ describe("basic machine function", () => {
       name: 'reset',
       from: ['error', 'success'],
       to: 'idle',
-      async execution({ stage }) {
-        return { stage: 'idle', context: { promise: stage.context.promise }}
+      async execution({ context }) {
+        return { stage: 'idle', context: { promise: context.promise }}
       }
     })
-    .on(['success', 'error'], mockEventListener)
+    .on(['idle', 'success', 'error'], mockEventListener)
 
   let machine = builder.build({
     initialStage: { stage: 'idle', context: { promise: mockContextFn } }
@@ -66,7 +66,7 @@ describe("basic machine function", () => {
 
     expect(machine.currentStage.stage === 'success' && machine.currentStage.context.result === '1234')
 
-    expect(mockEventListener).toBeCalledTimes(1)
+    expect(mockEventListener).toBeCalledTimes(2)
     mockContextFn.mockRejectedValueOnce(new Error('hello'))
 
     transition = machine.dispatch('init')
@@ -93,5 +93,25 @@ describe("basic machine function", () => {
     machine.reset()
     expect(machine.currentStage.stage).toBe('idle')
   })
+
+  test('can self transition', async () => {
+    const machine = create<Stages>()
+      .transition({ 
+        name: 'startup',
+        from: 'idle',
+        to: 'success',
+        async execution({ context }) {
+          return { stage: 'success', context: { ...context, result: await context.promise() }}
+        }
+      })
+      .on('idle', (_, dispatch) => {
+        console.log('calling', dispatch)
+        dispatch('startup')
+      })
+      .build({ initialStage: { stage: 'idle', context: { promise: async () => '123'}}});
+    await new Promise((r) => setTimeout(() => r(null), 100))
+    console.log(machine.currentStage.stage)
+  })
+
 })
 
