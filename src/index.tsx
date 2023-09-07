@@ -1,6 +1,6 @@
 import { createRouter } from "radix3"
 import { proxy, useSnapshot } from "valtio"
-import React, { ComponentType, createContext, useContext, useEffect } from "react"
+import React, { ComponentType, Key, createContext, useContext, useEffect } from "react"
 import cloneDeep from "lodash.clonedeep"
 
 export type StagesDef<Stage, Event, Context> = {
@@ -53,7 +53,7 @@ type Stager<
   useStage: () => ReturnType<typeof useSnapshot<S>>
   useTransition: () => ReturnType<typeof useSnapshot<Stager<S, T>['transition']>>
   useListen: Stager<S, T>['on']
-  withStager: <T extends React.JSX.IntrinsicAttributes>(Component: ComponentType<T>) => ComponentType<T>
+  withStager: <T extends { key?: string | number | null | undefined }>(Component: ComponentType<T>) => ComponentType<T>
 }
 
 type TransitionInstance<
