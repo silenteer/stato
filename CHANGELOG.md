@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.5.0](https://github.com/silenteer/use-stage/compare/use-stager1.4.0...use-stager1.5.0) (2023-09-07)
+
+
+### Features
+
+* added more react specific options, added withStager to manage lifecycle ([e594019](https://github.com/silenteer/use-stage/commit/e5940195205823e9810555ef2e1395821a3b3719))
+
 ## [1.4.0](https://github.com/silenteer/use-stage/compare/use-stager1.3.0...use-stager1.4.0) (2023-09-06)
 
 
