@@ -107,7 +107,7 @@ class StageBuilder<
     name: N,
     listener: (
       stage: Extract<S, { stage: inferValueOrArrayValue<N> }>,
-      dispatch: Stager<S, T>['dispatch']  
+      dispatch: Stager<S, T>['dispatch']
     ) => (void | Promise<void>)
   ): StageBuilder<S, T> {
     const names = typeof name === 'string' ? [name] : [...name]
@@ -130,7 +130,7 @@ class StageBuilder<
         const froms = Array.isArray(transition.from) ? transition.from : [transition.from]
         const tos = Array.isArray(transition.to) ? transition.to : [transition.to]
         transitionRouter.insert(`/event/${transition.name}`, transition)
-  
+
         for (const from of froms) {
           for (const to of tos) {
             transitionRouter.insert(`/route/${from}/${to}`, transition)
@@ -179,7 +179,7 @@ class StageBuilder<
 
     const triggerEventListeners = async (stage: S['stage']) => {
       const matches = listenerRouters.lookup(`/listen/${stage}`)
-        
+
       if (matches) {
         for (const { listener } of matches) {
           await listener(stager.currentStage, stager.dispatch)
@@ -204,7 +204,7 @@ class StageBuilder<
       transitioning: undefined,
       transitioningTo(to) {
         if (stager.transitioning === undefined) return false
-        
+
         const targetTo: string[] = Array.isArray(to)
           ? to
           : [to]
@@ -216,7 +216,7 @@ class StageBuilder<
           ? from
           : [from]
 
-          return targetFrom.includes(stager.currentStage.stage)
+        return targetFrom.includes(stager.currentStage.stage)
       },
       reset: () => {
         stager.currentStage = proxy(cloneDeep(initialStage))
@@ -287,7 +287,7 @@ class StageBuilder<
       },
       on(stage, cb) {
         const names = typeof stage === 'string' ? [stage] : stage
-        return registerListener({ stage: names, listener: cb})
+        return registerListener({ stage: names, listener: cb })
       },
       useStage() {
         const stager = useContext(reactContext)
@@ -295,28 +295,32 @@ class StageBuilder<
         if (!stager) {
           throw new Error('stage context must be used within `withStager`')
         }
-        
+
         return useSnapshot(stager.currentStage)
       },
       useListen(stage, cb) {
         const names = typeof stage === 'string' ? [stage] : stage
-        
+
         useEffect(() => {
           return registerListener({ stage: names, listener: cb })
         }, [])
       },
       withStager(Component) {
-        useEffect(() => {
-          return () => stager.reset()
-        }, [])
+        return (props) => {
+          useEffect(() => {
+            return () => stager.reset()
+          }, [])
 
-        return (props) => <reactContext.Provider value={stager}>
-          <Component {...props}/>
-        </reactContext.Provider>
+          return (
+            <reactContext.Provider value={stager}>
+              <Component {...props} />
+            </reactContext.Provider>
+          )
+        }
       }
     }
 
-    const reactContext = createContext<Stager<S,T> | undefined>(undefined)
+    const reactContext = createContext<Stager<S, T> | undefined>(undefined)
     triggerEventListeners(stager.currentStage.stage)
 
     return stager
