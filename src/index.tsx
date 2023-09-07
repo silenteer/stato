@@ -1,6 +1,6 @@
 import { createRouter } from "radix3"
 import { proxy, useSnapshot } from "valtio"
-import React, { ComponentType, Key, createContext, useContext, useEffect } from "react"
+import React, { ComponentType, createContext, useContext, useEffect } from "react"
 import cloneDeep from "lodash.clonedeep"
 
 export type StagesDef<Stage, Event, Context> = {
@@ -102,7 +102,7 @@ class StageBuilder<
     P extends unknown[]
   >(
     option: TransitionInstance<S, Stager<S, T>, Event, From, To, P>
-  ): StageBuilder<S, T | TransitionInstance<S, Stager<S, T>, Event, From, To, P>> {
+  ): asserts this is StageBuilder<S, T | TransitionInstance<S, Stager<S, T>, Event, From, To, P>> {
     this.transitions.push(option)
     return this as any
   }
@@ -113,10 +113,10 @@ class StageBuilder<
       stage: Extract<S, { stage: inferValueOrArrayValue<N> }>,
       dispatch: Stager<S, T>['dispatch']
     ) => (void | Promise<void>)
-  ): StageBuilder<S, T> {
+  ) {
     const names = typeof name === 'string' ? [name] : [...name]
     this.listeners.push({ stage: names, listener })
-    return this as any
+    return this
   }
 
   build({
