@@ -41,13 +41,28 @@ describe("basic machine function", () => {
 
   beforeEach(() => { 
     vi.resetAllMocks()
+    machine.stop()
     machine.reset()
     builder.build({
       initialStage: { stage: 'idle', context: { promise: mockContextFn } }
     })
   })
 
+  test('expect machine to be able to start and stop', async () => {
+    expect(machine.isRunning).not.toBeTruthy()
+    expect(machine.currentStage.stage).toBe('idle')
+    await machine.dispatch('init')
+    expect(machine.currentStage.stage).toBe('idle')
+    
+    machine.start()
+    expect(machine.isRunning).toBeTruthy()
+    await machine.dispatch('init')
+    expect(machine.currentStage.stage).toBe('success')
+  })
+
   test('expect machine to function', async () => {
+    machine.start()
+
     expect(machine.currentStage.stage).toBe('idle')
     let transition = machine.dispatch('init')
     expect(machine.transition.transitioning?.[0]).toContain('idle')
@@ -76,6 +91,7 @@ describe("basic machine function", () => {
   })
 
   test('maybe no side effect', async () => {
+    machine.start()
     const sideEffectListener = vi.fn()
 
     builder.on('success', sideEffectListener)
@@ -84,11 +100,14 @@ describe("basic machine function", () => {
     expect(sideEffectListener).toBeCalledTimes(0)
 
     const machine2 = builder.build({ initialStage: { stage: 'idle', context: { promise: async () => '123'}}})
+    machine2.start()
+    
     await machine2.dispatch('init')
     expect(sideEffectListener).toBeCalledTimes(1)
   })
 
   test('we can reset machine', async () => {
+    machine.start()
     await machine.dispatch('init')
     machine.reset()
     expect(machine.currentStage.stage).toBe('idle')
@@ -109,8 +128,11 @@ describe("basic machine function", () => {
         dispatch('startup')
       })
       .build({ initialStage: { stage: 'idle', context: { promise: async () => '123'}}});
-    await new Promise((r) => setTimeout(() => r(null), 100))
-    console.log(machine.currentStage.stage)
+      
+    machine.start()
+    await machine.transition.transitioned
+
+    expect(machine.currentStage.stage).toBe('success')
   })
 
 })
