@@ -60,14 +60,14 @@ type Stager<
   withStager: <T extends { key?: string | number | null | undefined }>(Component: ComponentType<T>) => ComponentType<T>
   Stage: <N extends S['stage']>(props: {
     stage: N
-    children: ReactNode | ((props: Readonly<Extract<S, {stage: N}>> & { 
+    children: ReactNode | ((props: Readonly<Extract<S, { stage: N }>> & {
       transition: Readonly<Stager<S, T>['transition']>,
-      dispatch: Stager<S, T>['dispatch'] 
-    }) => (React.JSX.Element | null))
-  }) => ReactNode
-  Stager: (props: { 
-    children: ReactNode | ((props: S & { transition: Readonly<Stager<S, T>['transition']>, dispatch: Stager<S, T>['dispatch'] }) => (React.JSX.Element | null))
-  }) => ReactNode
+      dispatch: Stager<S, T>['dispatch']
+    }) => ReactNode)
+  }) => React.JSX.Element | null
+  Stager: (props: {
+    children: ReactNode | ((props: S & { transition: Readonly<Stager<S, T>['transition']>, dispatch: Stager<S, T>['dispatch'] }) => ReactNode)
+  }) => React.JSX.Element | null
 }
 
 type TransitionInstance<
@@ -236,7 +236,7 @@ class StageBuilder<
         transitioning: undefined,
         transitioningTo(to) {
           if (stager.transition.transitioning === undefined) return false
-  
+
           const targetTo: string[] = Array.isArray(to)
             ? to
             : [to]
@@ -247,7 +247,7 @@ class StageBuilder<
           const targetFrom: string[] = Array.isArray(from)
             ? from
             : [from]
-  
+
           return targetFrom.includes(stager.currentStage.stage)
         },
       }),
@@ -289,7 +289,7 @@ class StageBuilder<
         stager.transition.transitioning = [stager.currentStage.stage, targetTo]
         stager.transition.isTransitioning = stager.transition.transitioning !== undefined
 
-        let resolve: (value: unknown) => void = () => {}
+        let resolve: (value: unknown) => void = () => { }
         stager.transition.transitioned = new Promise((resolved) => { resolve = resolved })
 
         const transitionResult: S | undefined | Promise<S | undefined> = transition.execution.apply(undefined, [{
@@ -375,12 +375,14 @@ class StageBuilder<
 
         if (stager.currentStage.stage !== name) return null
         else {
-          if (typeof children === 'function') {
-            return children({ transition, context, stage, dispatch: stager.dispatch } as any)
-          } else {
-            return children
-          }
-        } 
+          return <>
+            {
+              typeof children === 'function'
+                ? children({ transition, context, stage, dispatch: stager.dispatch } as any)
+                : children
+            }
+          </>
+        }
       },
       Stager: ({ children }) => {
         useEffect(() => {
