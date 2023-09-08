@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.7.1](https://github.com/silenteer/use-stage/compare/use-stager1.7.0...use-stager1.7.1) (2023-09-08)
+
+
+### Bug Fixes
+
+* added dispatch to Stage and Stager ([6b89ab3](https://github.com/silenteer/use-stage/commit/6b89ab38a4905dd81609e554364b76067470c461))
+
 ## [1.7.0](https://github.com/silenteer/use-stage/compare/use-stager1.6.9...use-stager1.7.0) (2023-09-08)
 
 
