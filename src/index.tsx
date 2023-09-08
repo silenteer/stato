@@ -60,9 +60,14 @@ type Stager<
   withStager: <T extends { key?: string | number | null | undefined }>(Component: ComponentType<T>) => ComponentType<T>
   Stage: <N extends S['stage']>(props: {
     stage: N
-    children: (props: Extract<S, {stage: N}> & { transition: Stager<S, T>['transition'] }) => (React.JSX.Element | null)
-  }) => (React.JSX.Element | null)
-  Stager: (props: { children: (props: S & { transition: Stager<S, T>['transition'], dispatch: Stager<S, T>['dispatch'] }) => (React.JSX.Element | null)}) => (React.JSX.Element | null)
+    children: ReactNode | ((props: Readonly<Extract<S, {stage: N}>> & { 
+      transition: Readonly<Stager<S, T>['transition']>,
+      dispatch: Stager<S, T>['dispatch'] 
+    }) => (React.JSX.Element | null))
+  }) => ReactNode
+  Stager: (props: { 
+    children: ReactNode | ((props: S & { transition: Readonly<Stager<S, T>['transition']>, dispatch: Stager<S, T>['dispatch'] }) => (React.JSX.Element | null))
+  }) => ReactNode
 }
 
 type TransitionInstance<
@@ -369,8 +374,13 @@ class StageBuilder<
         const { context, stage } = useSnapshot(stager.currentStage)
 
         if (stager.currentStage.stage !== name) return null
-
-        else return children({ transition, context, stage } as any)
+        else {
+          if (typeof children === 'function') {
+            return children({ transition, context, stage, dispatch: stager.dispatch } as any)
+          } else {
+            return children
+          }
+        } 
       },
       Stager: ({ children }) => {
         useEffect(() => {
@@ -386,7 +396,11 @@ class StageBuilder<
 
         return (
           <reactContext.Provider value={stager}>
-            {children({ transition, context, stage } as any)}
+            {
+              typeof children === 'function'
+                ? children({ transition, context, stage, dispatch: stager.dispatch } as any)
+                : children
+            }
           </reactContext.Provider>
         )
       }

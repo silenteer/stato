@@ -24,7 +24,7 @@
     "build": "yarn run tsup",
     "preview": "yarn run standard-version --path . --dry-run -t use-stager",
     "bump": "yarn build && yarn run standard-version --path . -t use-stager",
-    "release": "git push --follow-tags origin master && npm publish --access public"
+    "release": "git push --follow-tags origin master && yarn npm publish --access public --otp $NPM_TOKEN"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
