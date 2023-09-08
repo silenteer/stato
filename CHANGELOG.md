@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.7.2](https://github.com/silenteer/use-stage/compare/use-stager1.7.1...use-stager1.7.2) (2023-09-08)
+
+
+### Bug Fixes
+
+* fix weird react type ([c4cb906](https://github.com/silenteer/use-stage/commit/c4cb9061c64975419924b668748a796d3b6b9047))
+
 ### [1.7.1](https://github.com/silenteer/use-stage/compare/use-stager1.7.0...use-stager1.7.1) (2023-09-08)
 
 
