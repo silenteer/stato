@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.7.0](https://github.com/silenteer/use-stage/compare/use-stager1.6.9...use-stager1.7.0) (2023-09-08)
+
+
+### Features
+
+* added start/stop API ([9005396](https://github.com/silenteer/use-stage/commit/9005396da35c3bc78625f1660e939bd95692874c))
+
 ### [1.6.9](https://github.com/silenteer/use-stage/compare/use-stager1.6.8...use-stager1.6.9) (2023-09-07)
 
 
