@@ -19,11 +19,11 @@
     "radix3": "^1.1.0"
   },
   "scripts": {
-    "dev": "yarn run tsup --watch",
+    "dev": "tsup --watch",
     "test": "vitest run",
-    "build": "yarn run tsup",
-    "preview": "yarn run standard-version --path . --dry-run -t use-stager",
-    "bump": "yarn build && yarn run standard-version --path . -t use-stager",
+    "build": "tsup",
+    "preview": "standard-version --path . --dry-run -t use-stager",
+    "bump": "bun run build && bun run standard-version --path . -t use-stager",
     "release": "git push --follow-tags origin master && npm publish --access public"
   },
   "main": "dist/index.js",
