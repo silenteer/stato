@@ -5,9 +5,13 @@
   "description": "Maybe a simpler all-purpose (but mostly frontend) state machine",
   "author": "Lagz0ne <duke@silentium.io>",
   "devDependencies": {
+    "@testing-library/react": "^14.0.0",
     "@types/lodash.clonedeep": "^4.5.7",
     "@types/react": "^18.2.20",
+    "@vitejs/plugin-react": "^4.0.4",
+    "jsdom": "^22.1.0",
     "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "standard-version": "^9.5.0",
     "tsup": "^7.2.0",
     "typescript": "^5.2.2",

@@ -4,9 +4,9 @@ import { Stage, create } from "../src"
 describe("basic machine function", () => {
 
   type Stages =
-    | Stage<{ stage: 'idle', context: { promise: () => Promise<string> }}>
-    | Stage<{ stage: 'success', context: { result: string, promise: () => Promise<string> }}>
-    | Stage<{ stage: 'error', context: { error: Error, promise: () => Promise<string> }}>
+    | Stage<{ stage: 'idle', context: { promise: () => Promise<string> } }>
+    | Stage<{ stage: 'success', context: { result: string, promise: () => Promise<string> } }>
+    | Stage<{ stage: 'error', context: { error: Error, promise: () => Promise<string> } }>
 
   const mockContextFn = vi.fn(async () => '1234')
   const mockEventListener = vi.fn()
@@ -19,9 +19,9 @@ describe("basic machine function", () => {
       async execution({ context }) {
         try {
           const result = await context.promise()
-          return { stage: 'success', context: {...context, result }}
-        } catch(e) {
-          return {stage: 'error', context: { ...context, error: e}}
+          return { stage: 'success', context: { ...context, result } }
+        } catch (e) {
+          return { stage: 'error', context: { ...context, error: e } }
         }
       }
     })
@@ -30,7 +30,7 @@ describe("basic machine function", () => {
       from: ['error', 'success'],
       to: 'idle',
       async execution({ context }) {
-        return { stage: 'idle', context: { promise: context.promise }}
+        return { stage: 'idle', context: { promise: context.promise } }
       }
     })
     .on(['idle', 'success', 'error'], mockEventListener)
@@ -39,7 +39,7 @@ describe("basic machine function", () => {
     initialStage: { stage: 'idle', context: { promise: mockContextFn } }
   })
 
-  beforeEach(() => { 
+  beforeEach(() => {
     vi.resetAllMocks()
     machine.stop()
     machine.reset()
@@ -53,7 +53,7 @@ describe("basic machine function", () => {
     expect(machine.currentStage.stage).toBe('idle')
     await machine.dispatch('init')
     expect(machine.currentStage.stage).toBe('idle')
-    
+
     machine.start()
     expect(machine.isRunning).toBeTruthy()
     await machine.dispatch('init')
@@ -99,9 +99,9 @@ describe("basic machine function", () => {
 
     expect(sideEffectListener).toBeCalledTimes(0)
 
-    const machine2 = builder.build({ initialStage: { stage: 'idle', context: { promise: async () => '123'}}})
+    const machine2 = builder.build({ initialStage: { stage: 'idle', context: { promise: async () => '123' } } })
     machine2.start()
-    
+
     await machine2.dispatch('init')
     expect(sideEffectListener).toBeCalledTimes(1)
   })
@@ -115,20 +115,19 @@ describe("basic machine function", () => {
 
   test('can self transition', async () => {
     const machine = create<Stages>()
-      .transition({ 
+      .transition({
         name: 'startup',
         from: 'idle',
         to: 'success',
         async execution({ context }) {
-          return { stage: 'success', context: { ...context, result: await context.promise() }}
+          return { stage: 'success', context: { ...context, result: await context.promise() } }
         }
       })
       .on('idle', (_, dispatch) => {
-        console.log('calling', dispatch)
         dispatch('startup')
       })
-      .build({ initialStage: { stage: 'idle', context: { promise: async () => '123'}}});
-      
+      .build({ initialStage: { stage: 'idle', context: { promise: async () => '123' } } });
+
     machine.start()
     await machine.transition.transitioned
 
