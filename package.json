@@ -1,6 +1,6 @@
 {
   "name": "use-stager",
-  "version": "1.9.6",
+  "version": "1.10.0",
   "description": "Maybe a simpler all-purpose (but mostly frontend) state machine",
   "author": "Lagz0ne <duke@silentium.io>",
   "devDependencies": {
