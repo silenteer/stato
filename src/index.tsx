@@ -36,7 +36,7 @@ export type Stager<
     cb: (stage: Extract<S, { stage: inferValueOrArrayValue<X> }>) => valueOrPromiseValue<void | (() => void)>
   ) => void
 
-  dispatch: <N extends (T['name'] | Omit<string, T['name']>) | [S['stage'], S['stage']]>(
+  dispatch: <N extends T['name'] | [S['stage'], S['stage']]>(
     ...params: [
       N,
       ...N extends T['name']
@@ -117,18 +117,19 @@ export class StageBuilder<
   S extends StageDef,
   T extends TransitionInstance<S, Stager<any, any>> = NoTransition
 > {
-  _transitions: Array<TransitionInstance<S, any>> = []
+  transitions: Array<TransitionInstance<S, any>> = []
   listeners: Array<StageListener<S, T>> = []
 
-  transitions<
-    X extends Record<string, Omit<TransitionInstance<S, Stager<S, T>>, 'name'>>
-  >(transitions: X) {
-    this._transitions = Object.entries(transitions)
-      .map(([key, entry]) => {
-        return { name: key, ...entry }
-      })
-
-    return this as unknown as StageBuilder<S, { [key in keyof X]: X[key] & { name: key }}[keyof X]>
+  transition<
+    Event extends string,
+    From extends valueOrArrayValue<S['stage']>,
+    To extends valueOrArrayValue<S['stage']>,
+    P extends unknown[]
+  >(
+    option: TransitionInstance<S, Stager<S, T>, Event, From, To, P>
+  ) {
+    this.transitions.push(option)
+    return this as StageBuilder<S, T | TransitionInstance<S, Stager<S, T>, Event, From, To, P>>
   }
 
   on<N extends valueOrArrayValue<S['stage']>>(
@@ -149,7 +150,7 @@ export class StageBuilder<
   }
 
   build(opts?: StagerOptions): Stager<S, T> {
-    let transitions = cloneDeep(this._transitions)
+    let transitions = cloneDeep(this.transitions)
     let listeners = cloneDeep(this.listeners)
 
     let transitionRouter = createRouter<TransitionInstance<S, Stager<S, T>>>()

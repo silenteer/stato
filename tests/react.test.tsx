@@ -16,31 +16,31 @@ describe('App', () => {
   afterEach(cleanup)
 
   const builder = create<Stages>()
-    .transitions({
-      init: { 
-        from: ['idle', 'error', 'success'],
-        to: ['error', 'success'],
-        async execution({ context }) {
-          try {
-            const result = await context.promise()
-            return { stage: 'success', context: { ...context, result } }
-          } catch (e) {
-            return { stage: 'error', context: { ...context, error: e } }
-          }
+    .transition({
+      name: 'init',
+      from: ['idle', 'error', 'success'],
+      to: ['error', 'success'],
+      async execution({ context }) {
+        try {
+          const result = await context.promise()
+          return { stage: 'success', context: { ...context, result } }
+        } catch (e) {
+          return { stage: 'error', context: { ...context, error: e } }
         }
-      },
-      reset: {
-        from: ['error', 'success'],
-        to: 'idle',
-        async execution({ context }) {
-          return { stage: 'idle', context: { promise: context.promise } }
-        }
+      }
+    })
+    .transition({
+      name: 'reset',
+      from: ['error', 'success'],
+      to: 'idle',
+      async execution({ context }) {
+        return { stage: 'idle', context: { promise: context.promise } }
       }
     })
     .on(['idle', 'success', 'error'], mockEventListener)
   
   let machine = builder.clone().build()
-  
+
   beforeEach(() => {
     machine = builder.clone().build()
   })
