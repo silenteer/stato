@@ -18,13 +18,7 @@ const internal: unique symbol = Symbol.for('$internal')
 export type Stager<
   S extends StageDef,
   T extends TransitionInstance<S, any>
-> = ({
-  currentStage: undefined
-  isRunning: false
-} | {
-  currentStage: S
-  isRunning: true
-}) & {
+> = {
   [internal]: {}
   start(is: S): void
   stop(): void
@@ -68,7 +62,13 @@ export type Stager<
       dispatch: Stager<S, T>['dispatch']
     }) => ReactNode)
   }) => React.JSX.Element | null
-}
+} & ({
+  currentStage: undefined
+  isRunning: false
+} | {
+  currentStage: S
+  isRunning: true
+})
 
 type TransitionInstance<
   Stages extends StageDef,
