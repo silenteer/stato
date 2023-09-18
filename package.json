@@ -29,11 +29,11 @@
     "bump": "bun run build && bun run standard-version --path . -t use-stager",
     "release": "git push --follow-tags origin master && npm publish --access public"
   },
-  "main": "dist/react.js",
-  "types": "dist/react.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "tsup": {
     "entry": [
-      "src/react.tsx"
+      "src/index.tsx"
     ],
     "minify": false,
     "treeshake": false,
