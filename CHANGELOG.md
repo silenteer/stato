@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.11.1](https://github.com/silenteer/use-stage/compare/use-stager1.11.0...use-stager1.11.1) (2023-09-18)
+
+
+### Bug Fixes
+
+* added react to resolve jsx, changed initialContext to initialStage ([e0da2a5](https://github.com/silenteer/use-stage/commit/e0da2a5b540093ddcb4873a31a1516af7971f588))
+
 ## [1.11.0](https://github.com/silenteer/use-stage/compare/use-stager1.10.0...use-stager1.11.0) (2023-09-18)
 
 ## [1.10.0](https://github.com/silenteer/use-stage/compare/use-stager1.10.0...use-stager1.10.0) (2023-09-18)
