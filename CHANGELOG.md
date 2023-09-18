@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.9.5](https://github.com/silenteer/use-stage/compare/use-stager1.7.2...use-stager1.9.5) (2023-09-18)
+
+
+### Features
+
+* restructured to separate machine from react ([9d62204](https://github.com/silenteer/use-stage/commit/9d622045baeda416c0d4275d31e4b3b873da854a))
+
+
+### Bug Fixes
+
+* fix various bugs, added react-testing library ([5b62d6f](https://github.com/silenteer/use-stage/commit/5b62d6f164de8a568b5b3627cdaca12fdefc1280))
+* wrong config ([08b4842](https://github.com/silenteer/use-stage/commit/08b4842556ee9a4d3d7ac001f064093003675796))
+
+### [1.9.4](///compare/use-stager1.7.2...use-stager1.9.4) (2023-09-18)
+
+
+### Features
+
+* restructured to separate machine from react 9d62204
+
+
+### Bug Fixes
+
+* fix various bugs, added react-testing library 5b62d6f
+* wrong config 08b4842
+
 ### [1.9.3](///compare/use-stager1.7.2...use-stager1.9.3) (2023-09-18)
 
 
