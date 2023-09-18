@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, waitFor } from '@testing-library/react';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createStager, Stage, create } from "../src/react";
 

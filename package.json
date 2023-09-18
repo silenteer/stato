@@ -1,7 +1,6 @@
 {
   "name": "use-stager",
-  "packageManager": "yarn@3.5.0",
-  "version": "1.7.2",
+  "version": "1.9.2",
   "description": "Maybe a simpler all-purpose (but mostly frontend) state machine",
   "author": "Lagz0ne <duke@silentium.io>",
   "devDependencies": {
@@ -30,11 +29,11 @@
     "bump": "bun run build && bun run standard-version --path . -t use-stager",
     "release": "git push --follow-tags origin master && npm publish --access public"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/react.js",
+  "types": "dist/react.d.ts",
   "tsup": {
     "entry": [
-      "src/index.tsx"
+      "src/react.tsx"
     ],
     "minify": false,
     "treeshake": false,
