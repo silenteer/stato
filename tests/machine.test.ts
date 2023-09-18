@@ -12,25 +12,25 @@ describe("basic machine function", () => {
   const mockEventListener = vi.fn()
 
   const builder = create<Stages>()
-    .transition({
-      name: 'init',
-      from: ['idle', 'error', 'success'],
-      to: ['error', 'success'],
-      async execution({ context }) {
-        try {
-          const result = await context.promise()
-          return { stage: 'success', context: { ...context, result } }
-        } catch (e) {
-          return { stage: 'error', context: { ...context, error: e } }
+    .transitions({
+      init: {
+        from: ['idle', 'error', 'success'],
+        to: ['error', 'success'],
+        async execution({ context, dispatch }) {
+          try {
+            const result = await context.promise()
+            return { stage: 'success', context: { ...context, result } }
+          } catch (e) {
+            return { stage: 'error', context: { ...context, error: e } }
+          }
         }
-      }
-    })
-    .transition({
-      name: 'reset',
-      from: ['error', 'success'],
-      to: 'idle',
-      async execution({ context }) {
-        return { stage: 'idle', context: { promise: context.promise } }
+      },
+      reset: {
+        from: ['error', 'success'],
+        to: 'idle',
+        async execution({ context }) {
+          return { stage: 'idle', context: { promise: context.promise } }
+        }
       }
     })
     .on(['idle', 'success', 'error'], mockEventListener)
@@ -100,12 +100,13 @@ describe("basic machine function", () => {
 
   test('can self transition', async () => {
     const machine = create<Stages>()
-      .transition({
-        name: 'startup',
-        from: 'idle',
-        to: 'success',
-        async execution({ context }) {
-          return { stage: 'success', context: { ...context, result: await context.promise() } }
+      .transitions({
+        startup: {
+          from: 'idle',
+          to: 'success',
+          async execution({ context }) {
+            return { stage: 'success', context: { ...context, result: await context.promise() } }
+          }
         }
       })
       .on('idle', (_, dispatch) => {
