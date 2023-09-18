@@ -17,7 +17,7 @@ const internal: unique symbol = Symbol.for('$internal')
 
 export type Stager<
   S extends StageDef,
-  T extends TransitionInstance<S, any>
+  T extends TransitionInstance<S>
 > = {
   [internal]: {}
   start(is: S): void
@@ -72,7 +72,6 @@ export type Stager<
 
 type TransitionInstance<
   Stages extends StageDef,
-  S extends Stager<any, any>,
   Event extends string = any,
   From extends valueOrArrayValue<string> = any,
   To extends valueOrArrayValue<string> = any,
@@ -83,7 +82,7 @@ type TransitionInstance<
   to: To
   execution: (
     executionCtx: Extract<Stages, { stage: inferValueOrArrayValue<From> }> & {
-      dispatch: S['dispatch']
+      dispatch: (target: string, ...params: any[]) => void
     },
     ...params: Params
   ) => valueOrPromiseValue<Extract<Stages, { stage: To extends Array<infer T> ? T : To }>> | valueOrPromiseValue<undefined> | valueOrPromiseValue<void>
@@ -98,7 +97,7 @@ export type NoTransition = {
 
 type StageListener<
   Stages extends StageDef,
-  T extends TransitionInstance<Stages, Stager<any, any>>
+  T extends TransitionInstance<Stages>
 > = {
   stage: valueOrArrayValue<Stages['stage']>
   listener: (stage: Stages, dispatch: Stager<Stages, T>['dispatch']) => valueOrPromiseValue<void | (() => void)>
@@ -115,7 +114,7 @@ type ignoreFirstValue<T> = T extends [any, ...infer R] ? R : T
 
 export class StageBuilder<
   S extends StageDef,
-  T extends TransitionInstance<S, Stager<any, any>> = NoTransition
+  T extends TransitionInstance<S> = NoTransition
 > {
   transitions: Array<TransitionInstance<S, any>> = []
   listeners: Array<StageListener<S, T>> = []
@@ -126,10 +125,10 @@ export class StageBuilder<
     To extends valueOrArrayValue<S['stage']>,
     P extends unknown[]
   >(
-    option: TransitionInstance<S, Stager<S, T>, Event, From, To, P>
+    option: TransitionInstance<S, Event, From, To, P>
   ) {
     this.transitions.push(option)
-    return this as StageBuilder<S, T | TransitionInstance<S, Stager<S, T>, Event, From, To, P>>
+    return this as StageBuilder<S, T | TransitionInstance<S, Event, From, To, P>>
   }
 
   on<N extends valueOrArrayValue<S['stage']>>(
@@ -153,7 +152,7 @@ export class StageBuilder<
     let transitions = cloneDeep(this.transitions)
     let listeners = cloneDeep(this.listeners)
 
-    let transitionRouter = createRouter<TransitionInstance<S, Stager<S, T>>>()
+    let transitionRouter = createRouter<TransitionInstance<S>>()
     const registerTransitions = () => {
       for (const transition of transitions) {
         const froms = Array.isArray(transition.from) ? transition.from : [transition.from]
@@ -283,7 +282,7 @@ export class StageBuilder<
       async dispatch(name, ...params) {
         if (!stager.isRunning) return
 
-        let transition: TransitionInstance<S, Stager<S, T>> | null
+        let transition: TransitionInstance<S> | null
 
         if (typeof name === 'string') {
           transition = transitionRouter.lookup(`/event/${name}`)
