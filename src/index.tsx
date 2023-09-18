@@ -1,9 +1,8 @@
-import { ComponentType, ReactNode, createContext, useContext, useEffect, useMemo, useState } from "react"
+import { type ComponentType, type ReactNode, createContext, useContext, useEffect, useMemo } from "react"
 import { useSnapshot } from "valtio"
 import cloneDeep from "lodash.clonedeep"
 import { createRouter } from "radix3"
 import { proxy } from "valtio"
-import { valueOrArrayValue, inferValueOrArrayValue, valueOrPromiseValue, ignoreFirstValue } from "./utils"
 
 export type StagesDef<Stage, Event, Context> = {
   stage: Stage
@@ -71,7 +70,7 @@ export type Stager<
   }) => React.JSX.Element | null
 }
 
-export type TransitionInstance<
+type TransitionInstance<
   Stages extends StageDef,
   S extends Stager<any, any>,
   Event extends string = any,
@@ -90,6 +89,13 @@ export type TransitionInstance<
   ) => valueOrPromiseValue<Extract<Stages, { stage: To extends Array<infer T> ? T : To }>> | valueOrPromiseValue<undefined> | valueOrPromiseValue<void>
 }
 
+export type NoTransition = {
+  name: never
+  from: never
+  to: never
+  execution: never
+}
+
 type StageListener<
   Stages extends StageDef,
   T extends TransitionInstance<Stages, Stager<any, any>>
@@ -102,9 +108,14 @@ function isPromise(value: any): value is Promise<any> {
   return Boolean(value && typeof value.then === 'function');
 }
 
+type inferValueOrArrayValue<T> = T extends Array<infer V> ? V : T
+type valueOrPromiseValue<V> = V | Promise<V>
+type valueOrArrayValue<V> = V | Array<V>
+type ignoreFirstValue<T> = T extends [any, ...infer R] ? R : T
+
 export class StageBuilder<
   S extends StageDef,
-  T extends TransitionInstance<S, Stager<any, any>> = never
+  T extends TransitionInstance<S, Stager<any, any>> = NoTransition
 > {
   transitions: Array<TransitionInstance<S, any>> = []
   listeners: Array<StageListener<S, T>> = []
