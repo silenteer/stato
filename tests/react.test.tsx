@@ -49,7 +49,7 @@ describe('App', () => {
     expect(machine.isRunning).not.toBeTruthy()
 
     const { unmount, getByTestId } = render(
-      <machine.Stager initialContext={{ stage: 'idle', context: { promise: mockContextFn }}}>
+      <machine.Stager initialStage={{ stage: 'idle', context: { promise: mockContextFn }}}>
         {({ context, stage, dispatch }) => <>
           <div data-testid="stage">{stage}</div>
           <button onClick={() => dispatch('init')} data-testid="dispatcher">
@@ -76,7 +76,7 @@ describe('App', () => {
       .build()
 
     const { getByTestId } = render(
-      <machine.Stager initialContext={{ stage: 'idle', context: { promise: mockContextFn } }}>
+      <machine.Stager initialStage={{ stage: 'idle', context: { promise: mockContextFn } }}>
         {({ stage, dispatch }) => <>
           <div data-testid="stage">{stage}</div>
           <button onClick={() => dispatch('init')} data-testid="dispatcher">
@@ -91,7 +91,7 @@ describe('App', () => {
 
   it('transition using react interactions', async () => {
     const { getByTestId, queryAllByTestId } = render(
-      <machine.Stager initialContext={{ stage: 'idle', context: { promise: mockContextFn } }}>
+      <machine.Stager initialStage={{ stage: 'idle', context: { promise: mockContextFn } }}>
         {({ context, stage, dispatch }) => <>
           <div data-testid="stage">{stage}</div>
           {stage === 'success' && <div data-testid="context">{context.result}</div>}
@@ -113,7 +113,7 @@ describe('App', () => {
 
   it('unmount should reset state', async () => {
     let { unmount, getByTestId } = render(
-      <machine.Stager initialContext={{ stage: 'idle', context: { promise: mockContextFn } }}>
+      <machine.Stager initialStage={{ stage: 'idle', context: { promise: mockContextFn } }}>
         {({ context, stage, dispatch }) => <>
           <div data-testid="stage">{stage}</div>
           <button onClick={() => dispatch('init')} data-testid="dispatcher">
@@ -130,7 +130,7 @@ describe('App', () => {
     expect(machine.isRunning).not.toBeTruthy()
 
     render(
-      <machine.Stager initialContext={{ stage: 'idle', context: { promise: mockContextFn } }}>
+      <machine.Stager initialStage={{ stage: 'idle', context: { promise: mockContextFn } }}>
         {({ context, stage, dispatch }) => <>
           <div data-testid="stage">{stage}</div>
           <button onClick={() => dispatch('init')} data-testid="dispatcher">
@@ -147,7 +147,7 @@ describe('App', () => {
     expect(machine.isRunning).not.toBeTruthy()
 
     let { unmount, getByTestId } = render(
-      <machine.Stager initialContext={{ stage: 'success', context: { promise: mockContextFn, result: '12345' } }}>
+      <machine.Stager initialStage={{ stage: 'success', context: { promise: mockContextFn, result: '12345' } }}>
         {({ context, stage, dispatch }) => <>
           <div data-testid="stage">{stage}</div>
           {stage === 'success' && <div data-testid="context">{context.result}</div>}
@@ -166,7 +166,7 @@ describe('App', () => {
     const Component = ({ input }: { input: string }) => {
       const [machine] = useState(() => builder.build())
 
-      return <machine.Stager initialContext={{ stage: 'success', context: { promise: mockContextFn, result: input } }}>
+      return <machine.Stager initialStage={{ stage: 'success', context: { promise: mockContextFn, result: input } }}>
         {({ context, stage, dispatch }) => <>
           <div data-testid="stage">{stage}</div>
           {stage === 'success' && <div data-testid="context">{context.result}</div>}
@@ -201,7 +201,7 @@ describe('App', () => {
 
   it('show case', async () => {
     const Component = () => {
-      return <machine.Stager initialContext={{ stage: 'idle', context: { promise: mockContextFn } }}>
+      return <machine.Stager initialStage={{ stage: 'idle', context: { promise: mockContextFn } }}>
         <TransitionStatus />
         <ContextContent />
         <Dispatcher />

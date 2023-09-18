@@ -1,4 +1,4 @@
-import { type ComponentType, type ReactNode, createContext, useContext, useEffect, useMemo } from "react"
+import React, { type ComponentType, type ReactNode, createContext, useContext, useEffect, useMemo } from "react"
 import { useSnapshot } from "valtio"
 import cloneDeep from "lodash.clonedeep"
 import { createRouter } from "radix3"
@@ -48,7 +48,7 @@ export type Stager<
   withStager: <T extends { key?: string | number | null | undefined }>(Component: ComponentType<T>, initialContext: S) => ComponentType<T>
   Stager: (props: {
     children: ReactNode | ((props: S & { transition: Readonly<Stager<S, T>['transition']>, dispatch: Stager<S, T>['dispatch'] }) => ReactNode),
-    initialContext: S
+    initialStage: S
   }) => React.JSX.Element | null
   
   useStage: () => ReturnType<typeof useSnapshot<S>>
@@ -345,7 +345,7 @@ export class StageBuilder<
       withStager(Component, is) {
         return (props: any) => {
           return (
-            <stager.Stager initialContext={is}>
+            <stager.Stager initialStage={is}>
               <Component {...props} />
             </stager.Stager>
           )
@@ -405,22 +405,22 @@ export class StageBuilder<
           </>
         }
       },
-      Stager: ({ children, initialContext }) => {
+      Stager: ({ children, initialStage }) => {
         const instance = useMemo(() => {
-          stager.start(initialContext)
+          stager.start(initialStage)
   
           if (!stager.isRunning) {
             throw new Error('type assertions')
           }
   
           return stager
-        }, [initialContext])
+        }, [initialStage])
   
         useEffect(() => {
           return () => {
             stager.stop()
           }
-        }, [initialContext])
+        }, [initialStage])
   
         const transition = useSnapshot(instance.transition)
         const { context, stage } = useSnapshot(instance.currentStage)
