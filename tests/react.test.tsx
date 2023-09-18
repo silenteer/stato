@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, waitFor } from '@testing-library/react';
 import { useState } from 'react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createStager, Stage, create } from "../src/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { Stage, create } from "../src";
 
 describe('App', () => {
 
@@ -15,7 +15,7 @@ describe('App', () => {
 
   afterEach(cleanup)
 
-  const template = create<Stages>()
+  const builder = create<Stages>()
     .transition({
       name: 'init',
       from: ['idle', 'error', 'success'],
@@ -39,9 +39,13 @@ describe('App', () => {
     })
     .on(['idle', 'success', 'error'], mockEventListener)
   
-  it('transition the machine should reflect on screen', async () => {
-    const machine = createStager(template.build())
+  let machine = builder.clone().build()
 
+  beforeEach(() => {
+    machine = builder.clone().build()
+  })
+
+  it('transition the machine should reflect on screen', async () => {
     expect(machine.isRunning).not.toBeTruthy()
 
     const { unmount, getByTestId } = render(
@@ -64,12 +68,12 @@ describe('App', () => {
   });
 
   it('transition using self interactions', async () => {
-    let machine = createStager(template
+    let machine = builder
       .clone()
       .on('idle', async (_, dispatch) => {
         await dispatch('init')
       })
-      .build())
+      .build()
 
     const { getByTestId } = render(
       <machine.Stager initialContext={{ stage: 'idle', context: { promise: mockContextFn } }}>
@@ -86,8 +90,6 @@ describe('App', () => {
   });
 
   it('transition using react interactions', async () => {
-    let machine = createStager(template.build())
-
     const { getByTestId, queryAllByTestId } = render(
       <machine.Stager initialContext={{ stage: 'idle', context: { promise: mockContextFn } }}>
         {({ context, stage, dispatch }) => <>
@@ -110,9 +112,6 @@ describe('App', () => {
   });
 
   it('unmount should reset state', async () => {
-    const machine = createStager(template.build())
-    expect(machine.isRunning).not.toBeTruthy()
-
     let { unmount, getByTestId } = render(
       <machine.Stager initialContext={{ stage: 'idle', context: { promise: mockContextFn } }}>
         {({ context, stage, dispatch }) => <>
@@ -145,7 +144,6 @@ describe('App', () => {
   });
 
   it('can set initial state to any', async () => {
-    const machine = createStager(template.build())
     expect(machine.isRunning).not.toBeTruthy()
 
     let { unmount, getByTestId } = render(
@@ -166,7 +164,7 @@ describe('App', () => {
 
   it('inline state', async () => {
     const Component = ({ input }: { input: string }) => {
-      const [machine] = useState(() => createStager(template.build()))
+      const [machine] = useState(() => builder.build())
 
       return <machine.Stager initialContext={{ stage: 'success', context: { promise: mockContextFn, result: input } }}>
         {({ context, stage, dispatch }) => <>
@@ -202,8 +200,6 @@ describe('App', () => {
   });
 
   it('show case', async () => {
-    const machine = createStager(template)
-
     const Component = () => {
       return <machine.Stager initialContext={{ stage: 'idle', context: { promise: mockContextFn } }}>
         <TransitionStatus />

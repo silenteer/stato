@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.9.3](///compare/use-stager1.7.2...use-stager1.9.3) (2023-09-18)
+
+
+### Features
+
+* restructured to separate machine from react 9d62204
+
+
+### Bug Fixes
+
+* fix various bugs, added react-testing library 5b62d6f
+
 ### [1.9.2](///compare/use-stager1.7.2...use-stager1.9.2) (2023-09-18)
 
 

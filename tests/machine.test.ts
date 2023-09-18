@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from "vitest"
-import { Stage, create } from "../src/react"
+import { Stage, create } from "../src"
 
 describe("basic machine function", () => {
 
