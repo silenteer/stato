@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.10.0](https://github.com/silenteer/use-stage/compare/use-stager1.9.6...use-stager1.10.0) (2023-09-18)
+
+
+### Features
+
+* moved to a simpler state to reduce ts computation ([d4be407](https://github.com/silenteer/use-stage/commit/d4be407a070d3ecd2b6b6e09b473135535e06ce3))
+
 ### [1.9.6](https://github.com/silenteer/use-stage/compare/use-stager1.9.5...use-stager1.9.6) (2023-09-18)
 
 ### [1.9.5](https://github.com/silenteer/use-stage/compare/use-stager1.7.2...use-stager1.9.5) (2023-09-18)
