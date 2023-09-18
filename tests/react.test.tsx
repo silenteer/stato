@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, waitFor } from '@testing-library/react';
 import { useMemo, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Stage, create } from "../src";
+import { createStager, Stage, create } from "../src/react";
 
 describe('App', () => {
 
@@ -15,7 +15,7 @@ describe('App', () => {
 
   afterEach(cleanup)
 
-  const builder = create<Stages>()
+  const template = create<Stages>()
     .transition({
       name: 'init',
       from: ['idle', 'error', 'success'],
@@ -38,15 +38,14 @@ describe('App', () => {
       }
     })
     .on(['idle', 'success', 'error'], mockEventListener)
-
+  
   it('transition the machine should reflect on screen', async () => {
-    let machine = builder.build({
-      initialStage: { stage: 'idle', context: { promise: mockContextFn } }
-    })
+    const machine = createStager(template.build())
+
     expect(machine.isRunning).not.toBeTruthy()
 
     const { unmount, getByTestId } = render(
-      <machine.Stager>
+      <machine.Stager initialContext={{ stage: 'idle', context: { promise: mockContextFn }}}>
         {({ context, stage, dispatch }) => <>
           <div data-testid="stage">{stage}</div>
           <button onClick={() => dispatch('init')} data-testid="dispatcher">
@@ -56,28 +55,24 @@ describe('App', () => {
       </machine.Stager>
     );
 
-    expect(machine.isRunning).toBeTruthy()
     expect(getByTestId('stage').innerHTML).toBe('idle')
 
     await machine.dispatch('init')
     expect(getByTestId('stage').innerHTML).toBe('success')
 
     unmount()
-    expect(machine.isRunning).not.toBeTruthy()
   });
 
   it('transition using self interactions', async () => {
-    let machine = builder
+    let machine = createStager(template
       .clone()
       .on('idle', async (_, dispatch) => {
         await dispatch('init')
       })
-      .build({
-        initialStage: { stage: 'idle', context: { promise: mockContextFn } }
-      })
+      .build())
 
     const { getByTestId } = render(
-      <machine.Stager>
+      <machine.Stager initialContext={{ stage: 'idle', context: { promise: mockContextFn } }}>
         {({ stage, dispatch }) => <>
           <div data-testid="stage">{stage}</div>
           <button onClick={() => dispatch('init')} data-testid="dispatcher">
@@ -91,13 +86,10 @@ describe('App', () => {
   });
 
   it('transition using react interactions', async () => {
-    let machine = builder
-      .build({
-        initialStage: { stage: 'idle', context: { promise: mockContextFn } }
-      })
+    let machine = createStager(template.build())
 
     const { getByTestId, queryAllByTestId } = render(
-      <machine.Stager>
+      <machine.Stager initialContext={{ stage: 'idle', context: { promise: mockContextFn } }}>
         {({ context, stage, dispatch }) => <>
           <div data-testid="stage">{stage}</div>
           {stage === 'success' && <div data-testid="context">{context.result}</div>}
@@ -118,13 +110,11 @@ describe('App', () => {
   });
 
   it('unmount should reset state', async () => {
-    let machine = builder.build({
-      initialStage: { stage: 'idle', context: { promise: mockContextFn } }
-    })
+    const machine = createStager(template.build())
     expect(machine.isRunning).not.toBeTruthy()
 
     let { unmount, getByTestId } = render(
-      <machine.Stager>
+      <machine.Stager initialContext={{ stage: 'idle', context: { promise: mockContextFn } }}>
         {({ context, stage, dispatch }) => <>
           <div data-testid="stage">{stage}</div>
           <button onClick={() => dispatch('init')} data-testid="dispatcher">
@@ -141,7 +131,7 @@ describe('App', () => {
     expect(machine.isRunning).not.toBeTruthy()
 
     render(
-      <machine.Stager>
+      <machine.Stager initialContext={{ stage: 'idle', context: { promise: mockContextFn } }}>
         {({ context, stage, dispatch }) => <>
           <div data-testid="stage">{stage}</div>
           <button onClick={() => dispatch('init')} data-testid="dispatcher">
@@ -155,13 +145,11 @@ describe('App', () => {
   });
 
   it('can set initial state to any', async () => {
-    let machine = builder.build({
-      initialStage: { stage: 'success', context: { promise: mockContextFn, result: '12345' } }
-    })
+    const machine = createStager(template.build())
     expect(machine.isRunning).not.toBeTruthy()
 
     let { unmount, getByTestId } = render(
-      <machine.Stager>
+      <machine.Stager initialContext={{ stage: 'success', context: { promise: mockContextFn, result: '12345' } }}>
         {({ context, stage, dispatch }) => <>
           <div data-testid="stage">{stage}</div>
           {stage === 'success' && <div data-testid="context">{context.result}</div>}
@@ -178,13 +166,9 @@ describe('App', () => {
 
   it('inline state', async () => {
     const Component = ({ input }: { input: string }) => {
-      const machine = useMemo(() => {
-        return builder.build({
-          initialStage: { stage: 'idle', context: { promise: mockContextFn } }
-        })
-      }, [input])
+      const [machine] = useState(() => createStager(template.build()))
 
-      return <machine.Stager>
+      return <machine.Stager initialContext={{ stage: 'success', context: { promise: mockContextFn, result: input } }}>
         {({ context, stage, dispatch }) => <>
           <div data-testid="stage">{stage}</div>
           {stage === 'success' && <div data-testid="context">{context.result}</div>}
@@ -212,16 +196,16 @@ describe('App', () => {
 
     fireEvent.change(getByTestId('input'), { target: { value: '1235' } })
     getByTestId('dispatcher').click()
+
     await waitFor(() => expect(getByTestId('stage').innerHTML).toBe('success'))
+    expect(getByTestId('context').innerHTML).toBe('1235')
   });
 
   it('show case', async () => {
-    let machine = builder.build({
-      initialStage: { stage: 'idle', context: { promise: mockContextFn } }
-    })
+    const machine = createStager(template)
 
     const Component = () => {
-      return <machine.Stager>
+      return <machine.Stager initialContext={{ stage: 'idle', context: { promise: mockContextFn } }}>
         <TransitionStatus />
         <ContextContent />
         <Dispatcher />
@@ -231,7 +215,7 @@ describe('App', () => {
     const TransitionStatus = () => {
       const transition = machine.useTransition()
       return <>
-        <div data-testid='transitioning'>Transitioning {transition.transitioning}</div>
+        <div data-testid='transitioning'>Transitioning {JSON.stringify(transition.isTransitioning)}</div>
       </>
     }
 
@@ -253,11 +237,17 @@ describe('App', () => {
     let { getByTestId, debug } = render(<Component />)
     expect(getByTestId('stage').innerHTML).toBe('idle')
     expect(getByTestId('context').innerHTML).toBe('')
-    // await waitFor(() =>
-    //   expect(getByTestId('transitioning').innerHTML).toBe('Transitioning true')
-    // )
+    
+    getByTestId('dispatcher').click()
 
-    machine.dispatch('init')
+    await waitFor(() =>
+      expect(getByTestId('transitioning').innerHTML).toBe('Transitioning true')
+    )
+
+    await waitFor(() =>
+      expect(getByTestId('transitioning').innerHTML).toBe('Transitioning false')
+    )
+
     await waitFor(() => expect(getByTestId('stage').innerHTML).toBe('success'))
     expect(getByTestId('context').innerHTML).toBe('1234')
   });

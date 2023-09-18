@@ -1,7 +1,7 @@
 import cloneDeep from "lodash.clonedeep"
 import { createRouter } from "radix3"
-import React, { ComponentType, ReactNode, createContext, useContext, useEffect } from "react"
-import { proxy, useSnapshot } from "valtio"
+import { proxy } from "valtio"
+import { valueOrArrayValue, inferValueOrArrayValue, valueOrPromiseValue, ignoreFirstValue } from "./utils"
 
 export type StagesDef<Stage, Event, Context> = {
   stage: Stage
@@ -9,37 +9,23 @@ export type StagesDef<Stage, Event, Context> = {
   event?: Event
   nextEvents: Event[]
 }
-
-export type StageDef = {
-  stage: string
-  context: any
-}
-
+export type StageDef = { stage: string, context: any }
 export type Stage<S extends StageDef> = S
-
-type NoTransition = {
-  name: never
-  from: never
-  to: never
-  execution: never
-}
-
-type inferValueOrArrayValue<T> = T extends Array<infer V> ? V : T
-type valueOrPromiseValue<V> = V | Promise<V>
-type valueOrArrayValue<V> = V | Array<V>
-type ignoreFirstValue<T> = T extends [any, ...infer R] ? R : T
 
 const internal: unique symbol = Symbol.for('$internal')
 
-type Stager<
+export type Stager<
   S extends StageDef,
   T extends TransitionInstance<S, any>
-> = {
-  [internal]: {}
+> = ({
+  currentStage: undefined
+  isRunning: false
+} | {
   currentStage: S
-  isRunning: boolean
-  start(): void
-  reset(): void
+  isRunning: true
+}) & {
+  [internal]: {}
+  start(is: S): void
   stop(): void
 
   transition: {
@@ -63,23 +49,9 @@ type Stager<
       : any
     ]
   ) => Promise<void>
-  useStage: () => ReturnType<typeof useSnapshot<S>>
-  useTransition: () => ReturnType<typeof useSnapshot<Stager<S, T>['transition']>>
-  useListen: Stager<S, T>['on']
-  withStager: <T extends { key?: string | number | null | undefined }>(Component: ComponentType<T>) => ComponentType<T>
-  Stage: <N extends S['stage']>(props: {
-    stage: N
-    children: ReactNode | ((props: Readonly<Extract<S, { stage: N }>> & {
-      transition: Readonly<Stager<S, T>['transition']>,
-      dispatch: Stager<S, T>['dispatch']
-    }) => ReactNode)
-  }) => React.JSX.Element | null
-  Stager: (props: {
-    children: ReactNode | ((props: S & { transition: Readonly<Stager<S, T>['transition']>, dispatch: Stager<S, T>['dispatch'] }) => ReactNode)
-  }) => React.JSX.Element | null
 }
 
-type TransitionInstance<
+export type TransitionInstance<
   Stages extends StageDef,
   S extends Stager<any, any>,
   Event extends string = any,
@@ -110,9 +82,9 @@ function isPromise(value: any): value is Promise<any> {
   return Boolean(value && typeof value.then === 'function');
 }
 
-class StageBuilder<
+export class StageBuilder<
   S extends StageDef,
-  T extends TransitionInstance<S, Stager<any, any>> = NoTransition
+  T extends TransitionInstance<S, Stager<any, any>> = never
 > {
   transitions: Array<TransitionInstance<S, any>> = []
   listeners: Array<StageListener<S, T>> = []
@@ -146,12 +118,7 @@ class StageBuilder<
     return builder
   }
 
-  build({
-    initialStage
-  }: StagerOptions & {
-    initialStage: S
-  }): Stager<S, T> {
-    const startPoint = proxy(cloneDeep(initialStage))
+  build(opts?: StagerOptions): Stager<S, T> {
     let transitions = cloneDeep(this.transitions)
     let listeners = cloneDeep(this.listeners)
 
@@ -213,7 +180,11 @@ class StageBuilder<
       unlisteners.clear()
     }
 
+    let resolve: (value: unknown) => void = () => { }
+
     const triggerEventListeners = async (stage: S['stage']) => {
+      if (!stager.isRunning) return
+
       const matches = listenerRouters.lookup(`/listen/${stage}`)
 
       if (matches) {
@@ -227,6 +198,8 @@ class StageBuilder<
     }
 
     const triggerStageChanges = async (nextStage: S) => {
+      if (!stager.isRunning) return
+
       if (nextStage.stage !== stager.currentStage.stage) {
         stager.currentStage.context = nextStage.context
         stager.currentStage.stage = nextStage.stage
@@ -237,34 +210,28 @@ class StageBuilder<
       }
     }
 
-    const stager: Stager<S, T> = {
+    const stager: Stager<S, T> = proxy({
       [internal]: {
         transitionRouter, listenerRouters, unlisteners
       },
       isRunning: false,
-      start: () => {
+      start: (is) => {
+        stager.currentStage = cloneDeep(is)
         stager.isRunning = true
         registerListeners()
         registerTransitions()
         triggerEventListeners(stager.currentStage.stage)
       },
-      reset: () => {
-        stager.currentStage = proxy(cloneDeep(initialStage))
-        transitionRouter = createRouter<TransitionInstance<S, Stager<S, T>>>()
-        listenerRouters = createRouter<Set<StageListener<S, T>>>()
-        unlisteners = new Set<any>()
-        registerListeners()
-        registerTransitions()
-      },
       stop: () => {
         stager.isRunning = false
       },
-      currentStage: startPoint,
-      transition: proxy({
+      currentStage: undefined,
+      transition: {
         transitioned: undefined,
         isTransitioning: false,
         transitioning: undefined,
         transitioningTo(to) {
+          if (!stager.isRunning) return false
           if (stager.transition.transitioning === undefined) return false
 
           const targetTo: string[] = Array.isArray(to)
@@ -273,6 +240,7 @@ class StageBuilder<
           return !!targetTo.find(to => stager.transition.transitioning?.[1].includes(to))
         },
         transitioningFrom(from) {
+          if (!stager.isRunning) return false
           if (stager.transition.transitioning === undefined) return false
           const targetFrom: string[] = Array.isArray(from)
             ? from
@@ -280,7 +248,7 @@ class StageBuilder<
 
           return targetFrom.includes(stager.currentStage.stage)
         },
-      }),
+      },
       async dispatch(name, ...params) {
         if (!stager.isRunning) return
 
@@ -318,8 +286,6 @@ class StageBuilder<
 
         stager.transition.transitioning = [stager.currentStage.stage, targetTo]
         stager.transition.isTransitioning = stager.transition.transitioning !== undefined
-
-        let resolve: (value: unknown) => void = () => { }
         stager.transition.transitioned = new Promise((resolved) => { resolve = resolved })
 
         const transitionResult: S | undefined | Promise<S | undefined> = transition.execution.apply(undefined, [{
@@ -328,113 +294,26 @@ class StageBuilder<
         }, ...params])
 
         if (isPromise(transitionResult)) {
-          await transitionResult
-            .then(async (result: S | undefined) => {
-              if (result) {
-                stager.transition.transitioning = undefined
-                stager.transition.isTransitioning = stager.transition.transitioning !== undefined
-                resolve(null)
-                await triggerStageChanges(result)
-              }
-            })
-            .finally(() => {
-              stager.transition.transitioning = undefined
-              stager.transition.isTransitioning = stager.transition.transitioning !== undefined
-              resolve(null)
-            })
+          const result = await transitionResult
+          if (result) {
+            await triggerStageChanges(result)
+          }
         } else {
-          stager.transition.transitioning = undefined
-          stager.transition.isTransitioning = stager.transition.transitioning !== undefined
-          resolve(null)
           if (transitionResult) {
             await triggerStageChanges(transitionResult)
           }
         }
+
+        stager.transition.transitioning = undefined
+        stager.transition.isTransitioning = stager.transition.transitioning !== undefined
+        resolve(null)
       },
       on(stage, cb) {
         const names = typeof stage === 'string' ? [stage] : stage
         return registerListener({ stage: names, listener: cb })
       },
-      withStager(Component) {
-        return (props) => {
-          return (
-            <stager.Stager>
-              <Component {...props} />
-            </stager.Stager>
-          )
-        }
-      },
-      useStage() {
-        const stager = useContext(reactContext)
-
-        if (!stager) {
-          throw new Error('stage context must be used within `withStager`')
-        }
-
-        return useSnapshot(stager.currentStage)
-      },
-      useListen(stage, cb) {
-        const names = typeof stage === 'string' ? [stage] : stage
-
-        useEffect(() => {
-          return registerListener({ stage: names, listener: cb })
-        }, [])
-      },
-      useTransition() {
-        const stager = useContext(reactContext)
-
-        if (!stager) {
-          throw new Error('stage context must be used within `withStager`')
-        }
-
-        return useSnapshot(stager.transition)
-      },
-      Stage: ({ stage: name, children }) => {
-        const stager = useContext(reactContext)
-
-        if (!stager) {
-          throw new Error('stage context must be used within `withStager`')
-        }
-
-        const transition = useSnapshot(stager.transition)
-        const { context, stage } = useSnapshot(stager.currentStage)
-
-        if (stager.currentStage.stage !== name) return null
-        else {
-          return <>
-            {
-              typeof children === 'function'
-                ? children({ transition, context, stage, dispatch: stager.dispatch } as any)
-                : children
-            }
-          </>
-        }
-      },
-      Stager: ({ children }) => {
-        useEffect(() => {
-          stager.start()
-          return () => {
-            stager.stop()
-            stager.reset()
-          }
-        }, [])
-
-        const transition = useSnapshot(stager.transition)
-        const { context, stage } = useSnapshot(stager.currentStage)
-
-        return (
-          <reactContext.Provider value={stager}>
-            {
-              typeof children === 'function'
-                ? children({ transition, context, stage, dispatch: stager.dispatch } as any)
-                : children
-            }
-          </reactContext.Provider>
-        )
-      }
-    }
-
-    const reactContext = createContext<Stager<S, T> | undefined>(undefined)
+      
+    })
 
     return stager
   }

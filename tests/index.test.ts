@@ -35,35 +35,27 @@ describe("basic machine function", () => {
     })
     .on(['idle', 'success', 'error'], mockEventListener)
 
-  let machine = builder.build({
-    initialStage: { stage: 'idle', context: { promise: mockContextFn } }
-  })
+  let machine = builder.build()
 
   beforeEach(() => {
     vi.resetAllMocks()
     machine.stop()
-    machine.reset()
-    builder.build({
-      initialStage: { stage: 'idle', context: { promise: mockContextFn } }
-    })
   })
 
   test('expect machine to be able to start and stop', async () => {
     expect(machine.isRunning).not.toBeTruthy()
-    expect(machine.currentStage.stage).toBe('idle')
     await machine.dispatch('init')
-    expect(machine.currentStage.stage).toBe('idle')
 
-    machine.start()
+    machine.start({ stage: 'idle', context: { promise: mockContextFn } })
     expect(machine.isRunning).toBeTruthy()
     await machine.dispatch('init')
-    expect(machine.currentStage.stage).toBe('success')
+    expect(machine.currentStage?.stage).toBe('success')
   })
 
   test('expect machine to function', async () => {
-    machine.start()
+    machine.start({ stage: 'idle', context: { promise: mockContextFn } })
 
-    expect(machine.currentStage.stage).toBe('idle')
+    expect(machine.currentStage?.stage).toBe('idle')
     let transition = machine.dispatch('init')
     expect(machine.transition.transitioning?.[0]).toContain('idle')
     expect(machine.transition.transitioning?.[1]).toContain('error')
@@ -76,10 +68,10 @@ describe("basic machine function", () => {
     expect(machine.transition.transitioningTo(['success', 'error'])).toBeTruthy()
 
     await transition
-    expect(machine.currentStage.stage).toBe('success')
+    expect(machine.currentStage?.stage).toBe('success')
     expect(machine.transition.transitioning).toBeUndefined()
 
-    expect(machine.currentStage.stage === 'success' && machine.currentStage.context.result === '1234')
+    expect(machine.currentStage?.stage === 'success' && machine.currentStage.context.result === '1234')
 
     expect(mockEventListener).toBeCalledTimes(2)
     mockContextFn.mockRejectedValueOnce(new Error('hello'))
@@ -87,11 +79,11 @@ describe("basic machine function", () => {
     transition = machine.dispatch('init')
     await transition
 
-    expect(machine.currentStage.stage).toBe('error')
+    expect(machine.currentStage?.stage).toBe('error')
   })
 
   test('maybe no side effect', async () => {
-    machine.start()
+    machine.start({ stage: 'idle', context: { promise: mockContextFn } })
     const sideEffectListener = vi.fn()
 
     builder.on('success', sideEffectListener)
@@ -100,17 +92,10 @@ describe("basic machine function", () => {
     expect(sideEffectListener).toBeCalledTimes(0)
 
     const machine2 = builder.build({ initialStage: { stage: 'idle', context: { promise: async () => '123' } } })
-    machine2.start()
+    machine2.start({ stage: 'idle', context: { promise: mockContextFn } })
 
     await machine2.dispatch('init')
     expect(sideEffectListener).toBeCalledTimes(1)
-  })
-
-  test('we can reset machine', async () => {
-    machine.start()
-    await machine.dispatch('init')
-    machine.reset()
-    expect(machine.currentStage.stage).toBe('idle')
   })
 
   test('can self transition', async () => {
@@ -128,10 +113,10 @@ describe("basic machine function", () => {
       })
       .build({ initialStage: { stage: 'idle', context: { promise: async () => '123' } } });
 
-    machine.start()
+    machine.start({ stage: 'idle', context: { promise: mockContextFn } })
     await machine.transition.transitioned
 
-    expect(machine.currentStage.stage).toBe('success')
+    expect(machine.currentStage?.stage).toBe('success')
   })
 
 })
