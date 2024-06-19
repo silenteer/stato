@@ -744,6 +744,30 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@silenteer/stato@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "@silenteer/stato@workspace:."
+  dependencies:
+    "@testing-library/dom": "npm:^10.1.0"
+    "@testing-library/react": "npm:^16.0.0"
+    "@testing-library/user-event": "npm:^14.5.2"
+    "@types/node": "npm:^20.14.5"
+    "@types/react": "npm:^18.3.3"
+    "@vitejs/plugin-react": "npm:^4.3.1"
+    jsdom: "npm:^24.1.0"
+    radix3: "npm:^1.1.2"
+    react: "npm:^18.3.1"
+    react-dom: "npm:^18.3.1"
+    standard-version: "npm:^9.5.0"
+    tsup: "npm:^8.1.0"
+    typescript: "npm:^5.4.5"
+    vite: "npm:^5.3.1"
+    vitest: "npm:^1.6.0"
+  peerDependencies:
+    react: "*"
+  languageName: unknown
+  linkType: soft
+
 "@sinclair/typebox@npm:^0.27.8":
   version: 0.27.8
   resolution: "@sinclair/typebox@npm:0.27.8"
@@ -4519,30 +4543,6 @@ __metadata:
   checksum: 10/a59fc3a3046007d376bf164b053011db8f6c1417b3512db697e36ea574ec47fca55086513f602ba237c62a2e61f4c60480eb84793fd0450a715bac9dd8634aa2
   languageName: node
   linkType: hard
-
-"stato@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "stato@workspace:."
-  dependencies:
-    "@testing-library/dom": "npm:^10.1.0"
-    "@testing-library/react": "npm:^16.0.0"
-    "@testing-library/user-event": "npm:^14.5.2"
-    "@types/node": "npm:^20.14.5"
-    "@types/react": "npm:^18.3.3"
-    "@vitejs/plugin-react": "npm:^4.3.1"
-    jsdom: "npm:^24.1.0"
-    radix3: "npm:^1.1.2"
-    react: "npm:^18.3.1"
-    react-dom: "npm:^18.3.1"
-    standard-version: "npm:^9.5.0"
-    tsup: "npm:^8.1.0"
-    typescript: "npm:^5.4.5"
-    vite: "npm:^5.3.1"
-    vitest: "npm:^1.6.0"
-  peerDependencies:
-    react: "*"
-  languageName: unknown
-  linkType: soft
 
 "std-env@npm:^3.5.0":
   version: 3.7.0
