@@ -1,40 +1,40 @@
 {
   "name": "stato",
-  "version": "1.11.1",
+  "version": "1.0.0",
   "description": "Maybe a simpler all-purpose (but mostly frontend) state machine",
   "author": "Lagz0ne <duke@silentium.io>",
   "devDependencies": {
-    "@testing-library/react": "^14.0.0",
-    "@testing-library/react-hooks": "^8.0.1",
+    "@testing-library/dom": "^10.1.0",
+    "@testing-library/react": "^16.0.0",
     "@testing-library/user-event": "^14.5.2",
-    "@types/lodash.clonedeep": "^4.5.7",
-    "@types/react": "^18.2.20",
-    "@vitejs/plugin-react": "^4.0.4",
-    "jsdom": "^22.1.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "@types/node": "^20.14.5",
+    "@types/react": "^18.3.3",
+    "@vitejs/plugin-react": "^4.3.1",
+    "jsdom": "^24.1.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "standard-version": "^9.5.0",
-    "tsup": "^7.2.0",
+    "tsup": "^8.1.0",
     "typescript": "^5.4.5",
-    "vitest": "^0.34.3"
+    "vite": "^5.3.1",
+    "vitest": "^1.6.0"
   },
   "dependencies": {
-    "lodash.clonedeep": "^4.5.0",
-    "radix3": "^1.1.0"
+    "radix3": "^1.1.2"
   },
   "scripts": {
     "dev": "tsup --watch",
     "test": "vitest run",
     "build": "tsup",
-    "preview": "standard-version --path . --dry-run -t use-stager",
-    "bump": "bun run build && bun run standard-version --path . -t use-stager",
+    "preview": "standard-version --path . --dry-run -t stato",
+    "bump": "yarn run build && yarn run standard-version --path . -t stato",
     "release": "git push --follow-tags origin master && npm publish --access public"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/use-stato.js",
+  "types": "dist/use-stato.d.ts",
   "tsup": {
     "entry": [
-      "src/index.tsx"
+      "src/use-stato.tsx"
     ],
     "minify": false,
     "treeshake": false,

@@ -1,4 +1,3 @@
-import cloneDeep from "lodash.clonedeep"
 import { createRouter } from "radix3"
 
 export type StatosDef<Stage, Event, Context> = {
@@ -105,10 +104,10 @@ export class StatoBuilder<
   }
 
   build(): FactoryFn<S, T, AP> {
-    let transitions = cloneDeep(this.transitions)
+    let transitions = [...this.transitions]
 
     return (param) => {
-      let enterListeners = cloneDeep(this.stateListeners)
+      let enterListeners = [...this.stateListeners]
       return new Stato(
         param.initialState,
         param.params,
