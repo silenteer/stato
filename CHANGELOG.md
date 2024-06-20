@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.1.0](https://github.com/silenteer/use-stager/compare/stato1.0.2...stato1.1.0) (2024-06-20)
+
+
+### Features
+
+* can listen to any names on builder ([7ac41cc](https://github.com/silenteer/use-stager/commit/7ac41cc797137026f95916fecc97b8d16fb06f8e))
+
 ### [1.0.2](https://github.com/silenteer/use-stager/compare/stato1.0.1...stato1.0.2) (2024-06-20)
 
 
