@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.2.1](https://github.com/silenteer/use-stager/compare/stato1.2.0...stato1.2.1) (2024-06-20)
+
+
+### Bug Fixes
+
+* Remove * operations, seems to be buggy ([06e8b9c](https://github.com/silenteer/use-stager/commit/06e8b9ca788efe0a6185a178b30851516f930ba4))
+
 ## [1.2.0](https://github.com/silenteer/use-stager/compare/stato1.1.0...stato1.2.0) (2024-06-20)
 
 
