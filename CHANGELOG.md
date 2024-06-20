@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.2.2](https://github.com/silenteer/use-stager/compare/stato1.2.1...stato1.2.2) (2024-06-20)
+
+
+### Bug Fixes
+
+* fixed issue with params are not injected to listener callback ([ea31250](https://github.com/silenteer/use-stager/commit/ea312506ff91736c489d1312819d2fdaa6b289e9))
+
 ### [1.2.1](https://github.com/silenteer/use-stager/compare/stato1.2.0...stato1.2.1) (2024-06-20)
 
 
