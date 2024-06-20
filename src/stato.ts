@@ -2,7 +2,7 @@ import { createRouter } from "radix3"
 import type { PrettyPrint } from "./utils"
 
 export type StatosDef<Stage, Event, Context> = {
-  stage: Stage
+  name: Stage
   context: Context
   event?: Event
   nextEvents: Event[]
@@ -42,7 +42,7 @@ export type StageListener<
   T extends TransitionInstance<Stages>,
   AP
 > = {
-  stage: valueOrArrayValue<Stages['name']> | "*"
+  name: valueOrArrayValue<Stages['name']> | "*"
   listener: (stage: Stages, dispatch: Stato<Stages, T, AP>['dispatch']) => valueOrPromiseValue<void | (() => void)>
 }
 
@@ -51,7 +51,7 @@ type valueOrPromiseValue<V> = V | Promise<V>
 type valueOrArrayValue<V> = V | Array<V>
 type ignoreFirstValue<T> = T extends [any, ...infer R] ? R : T
 
-export type StateListener<S extends StatoDef> = ((stage: S['name'] | '*', cb: (stage: S) => valueOrPromiseValue<void | (() => void)>) => void)[]
+export type StateListener<S extends StatoDef> = ((name: S['name'] | '*', cb: (name: S) => valueOrPromiseValue<void | (() => void)>) => void)[]
 
 export type FactoryFn<
   S extends StatoDef,
@@ -89,14 +89,14 @@ export class StatoBuilder<
   }
 
   on<N extends valueOrArrayValue<S['name']>>(
-    name: N,
+    name: N | '*',
     listener: (
-      stage: Extract<S, { name: inferValueOrArrayValue<N> }>,
+      name: Extract<S, { name: inferValueOrArrayValue<N> }>,
       dispatch: Stato<S, T, AP>['dispatch']
     ) => (void | Promise<void>)
   ) {
     const names = typeof name === 'string' ? [name] : [...name]
-    this.stateListeners.push({ stage: names, listener })
+    this.stateListeners.push({ name: names, listener })
     return this
   }
 
@@ -170,7 +170,7 @@ export class Stato<
 
   private registerStateListener(listener: StageListener<S, T, AP>) {
     const unlisteners: Array<() => void> = []
-    for (const stage of listener.stage) {
+    for (const stage of listener.name) {
       if (stage === '*') {
         let container = this.listenerRouters.lookup(`/enter/**`)
         if (!container) {
@@ -311,7 +311,7 @@ export class Stato<
   private async triggerEventListeners(to: S['name']) {
     const matches = this.listenerRouters.lookup(`/enter/${to}`)
     if (matches) {
-      for (const { listener, stage } of matches) {
+      for (const { listener } of matches) {
         const unlistener = await listener(this.currentState, this.dispatch)
         if (typeof unlistener === 'function') {
           this.unlisteners.add(unlistener)
