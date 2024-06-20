@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Maybe a simpler all-purpose (but mostly frontend) state machine",
   "author": "Lagz0ne <duke@silentium.io>",
+  "license": "MIT",
   "devDependencies": {
     "@testing-library/dom": "^10.1.0",
     "@testing-library/react": "^16.0.0",
@@ -30,11 +31,11 @@
     "bump": "yarn run build && yarn run standard-version --path . -t stato",
     "release": "git push --follow-tags origin master && npm publish --access public"
   },
-  "main": "dist/use-stato.js",
-  "types": "dist/use-stato.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "tsup": {
     "entry": [
-      "src/use-stato.tsx"
+      "src/index.ts"
     ],
     "minify": false,
     "treeshake": false,
@@ -43,6 +44,14 @@
     "clean": true,
     "dts": true
   },
+  "files": [
+    "dist",
+    "README.md",
+    "CHANGELOG.md",
+    "package.json",
+    "src",
+    "tsconfig.json"
+  ],
   "peerDependencies": {
     "react": "*"
   },

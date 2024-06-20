@@ -1,4 +1,5 @@
 import { createRouter } from "radix3"
+import type { PrettyPrint } from "./utils"
 
 export type StatosDef<Stage, Event, Context> = {
   stage: Stage
@@ -136,7 +137,7 @@ export class Stato<
   private stateChangeListeners = new Set<() => void>()
 
   constructor(
-    public currentState: S,
+    public currentState: PrettyPrint<S>,
     private params: AP,
     transitions: Array<TransitionInstance<S, any>>,
     enterListeners: Array<StageListener<S, T, AP>>,
