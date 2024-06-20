@@ -42,7 +42,7 @@ export type StageListener<
   T extends TransitionInstance<Stages>,
   AP
 > = {
-  name: valueOrArrayValue<Stages['name']> | "*"
+  name: valueOrArrayValue<Stages['name']>
   listener: (stage: Stages, dispatch: Stato<Stages, T, AP>['dispatch']) => valueOrPromiseValue<void | (() => void)>
 }
 
@@ -51,7 +51,7 @@ type valueOrPromiseValue<V> = V | Promise<V>
 type valueOrArrayValue<V> = V | Array<V>
 type ignoreFirstValue<T> = T extends [any, ...infer R] ? R : T
 
-export type StateListener<S extends StatoDef> = ((name: S['name'] | '*', cb: (name: S) => valueOrPromiseValue<void | (() => void)>) => void)[]
+export type StateListener<S extends StatoDef> = ((name: S['name'], cb: (name: S) => valueOrPromiseValue<void | (() => void)>) => void)[]
 
 export type FactoryFn<
   S extends StatoDef,
@@ -89,14 +89,13 @@ export class StatoBuilder<
   }
 
   on<N extends valueOrArrayValue<S['name']>>(
-    name: N | '*',
+    name: N,
     listener: (
       stage: PrettyPrint<Extract<S, { name: inferValueOrArrayValue<N> }> & { params: AP }>,
       dispatch: Stato<S, T, AP>['dispatch']
     ) => (void | Promise<void>)
   ) {
-    const names = typeof name === 'string' ? [name] : [...name]
-    this.stateListeners.push({ name: names, listener })
+    this.stateListeners.push({ name, listener })
     return this
   }
 
@@ -167,19 +166,11 @@ export class Stato<
 
   private registerStateListener(listener: StageListener<S, T, AP>) {
     const unlisteners: Array<() => void> = []
-    for (const stage of listener.name) {
-      if (stage === '*') {
-        let container = this.listenerRouters.lookup(`/enter/**`)
-        if (!container) {
-          container = new Set()
-          this.listenerRouters.insert(`/enter/**`, container)
-        }
+    const cleanUp = () => unlisteners.forEach(unlistener => unlistener())
 
-        container.add(listener)
-        unlisteners.push(() => { container.delete(listener) })
-        continue
-      }
+    const names = Array.isArray(listener.name) ? listener.name : [listener.name]
 
+    for (const stage of names) {
       let container = this.listenerRouters.lookup(`/enter/${stage}`)
       if (!container) {
         container = new Set()
@@ -190,7 +181,7 @@ export class Stato<
       unlisteners.push(() => { container.delete(listener) })
     }
 
-    return () => unlisteners.forEach(unlistener => unlistener())
+    return cleanUp
   }
 
   onStateChanged(listener: StageListener<S, T, AP>) {
@@ -308,7 +299,9 @@ export class Stato<
   private async triggerEventListeners(to: S['name']) {
     const matches = this.listenerRouters.lookup(`/enter/${to}`)
     if (matches) {
-      for (const { listener } of matches) {
+      for (const item of matches) {
+
+        const { name, listener } = item
         const unlistener = await listener(this.currentState, this.dispatch)
         if (typeof unlistener === 'function') {
           this.unlisteners.add(unlistener)

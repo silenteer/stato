@@ -38,7 +38,7 @@ describe("basic machine function", () => {
         return { name: 'idle', context: { promise: context.promise } }
       }
     })
-    .on(['idle', 'success', 'error'], mockEventListener)
+    .on(['error', 'success', 'idle'], mockEventListener)
 
   let template = builder.build()
 
