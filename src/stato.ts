@@ -22,12 +22,12 @@ export type TransitionInstance<
   from: From
   to: To
   execution: (
-    executionCtx: Extract<States, { name: inferValueOrArrayValue<From> }> & {
+    executionCtx: PrettyPrint<Extract<States, { name: inferValueOrArrayValue<From> }>> & {
       dispatch: (target: string, ...params: any[]) => void
       params: AP
     },
     ...params: Params
-  ) => valueOrPromiseValue<Extract<States, { name: To extends Array<infer T> ? T : To }>> | valueOrPromiseValue<undefined> | valueOrPromiseValue<void>
+  ) => valueOrPromiseValue<PrettyPrint<Extract<States, { name: To extends Array<infer T> ? T : To }>>> | valueOrPromiseValue<undefined> | valueOrPromiseValue<void>
 }
 
 export type NoTransition = {
@@ -91,7 +91,7 @@ export class StatoBuilder<
   on<N extends valueOrArrayValue<S['name']>>(
     name: N | '*',
     listener: (
-      name: Extract<S, { name: inferValueOrArrayValue<N> }>,
+      stage: PrettyPrint<Extract<S, { name: inferValueOrArrayValue<N> }> & { params: AP }>,
       dispatch: Stato<S, T, AP>['dispatch']
     ) => (void | Promise<void>)
   ) {
@@ -117,7 +117,6 @@ export class StatoBuilder<
       )
     }
   }
-
 }
 
 export class Stato<
@@ -155,8 +154,6 @@ export class Stato<
   }
 
   private registerTransitionInstance(transition: TransitionInstance<S>) {
-    const unlisteners: Array<() => void> = []
-
     const froms = Array.isArray(transition.from) ? transition.from : [transition.from]
     const tos = Array.isArray(transition.to) ? transition.to : [transition.to]
     this.transitionRouter.insert(`/event/${transition.name}`, transition)
@@ -226,7 +223,7 @@ export class Stato<
     ...params: [
       N,
       ...N extends T['name']
-      ? ignoreFirstValue<Parameters<Extract<T, { name: N }>['execution']>>
+      ? PrettyPrint<ignoreFirstValue<Parameters<Extract<T, { name: N }>['execution']>>>
       : any
     ]
   ) => Promise<void> = async (name, ...params) => {
