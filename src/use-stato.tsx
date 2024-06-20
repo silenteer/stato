@@ -31,7 +31,8 @@ export function createMachine<
 
     return useSyncExternalStore(
       subscribe,
-      () => stato.currentState
+      () => stato.currentState,
+      () => stato.currentState,
     )
   }
 
@@ -46,7 +47,8 @@ export function createMachine<
 
     return useSyncExternalStore(
       subscribe,
-      () => stato.transitioning
+      () => stato.transitioning,
+      () => stato.transitioning,
     )
   }
 
