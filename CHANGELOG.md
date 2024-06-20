@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.0.2](https://github.com/silenteer/use-stager/compare/stato1.0.1...stato1.0.2) (2024-06-20)
+
+
+### Bug Fixes
+
+* added missing getServerSnapshot ([a6b49c5](https://github.com/silenteer/use-stager/commit/a6b49c518109816e15f30147e5d1011bd59e5e33))
+
 ### [1.0.1](https://github.com/silenteer/use-stager/compare/stato1.0.0...stato1.0.1) (2024-06-20)
 
 ## 1.0.0 (2024-06-19)
