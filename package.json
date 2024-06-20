@@ -1,6 +1,6 @@
 {
   "name": "@silenteer/stato",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Maybe a simpler all-purpose (but mostly frontend) state machine",
   "author": "Lagz0ne <duke@silentium.io>",
   "license": "MIT",

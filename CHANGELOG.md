@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.2.0](https://github.com/silenteer/use-stager/compare/stato1.1.0...stato1.2.0) (2024-06-20)
+
+
+### Features
+
+* added typescript as peer dependencies and added few tweaks ([fce5e37](https://github.com/silenteer/use-stager/commit/fce5e377c6eadc445a7b2381d3ac2695d3db60d3))
+
 ## [1.1.0](https://github.com/silenteer/use-stager/compare/stato1.0.2...stato1.1.0) (2024-06-20)
 
 
