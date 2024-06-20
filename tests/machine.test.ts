@@ -17,6 +17,7 @@ describe("basic machine function", () => {
   })
 
   const builder = create<States>()
+    .params<{ value: string }>()
     .transition({
       name: 'init',
       from: ['idle', 'error', 'success'],
@@ -45,7 +46,7 @@ describe("basic machine function", () => {
   test('basic machine function', async () => {
     const machine = template({
       initialState: { name: 'idle', context: { promise: mockContextFn } },
-      params: undefined
+      params: { value: '1234' }
     })
 
     expect(machine.currentState.name).toBe('idle')
@@ -62,7 +63,7 @@ describe("basic machine function", () => {
   test('test transitioning', async () => {
     const machine = template({
       initialState: { name: 'idle', context: { promise: mockContextFn } },
-      params: undefined
+      params: { value: '1234' }
     })
 
     expect(machine.currentState.name).toBe('idle')
@@ -84,6 +85,8 @@ describe("basic machine function", () => {
     expect(machine.currentState.name === 'success' && machine.currentState.context.result === '1234')
 
     expect(mockEventListener).toBeCalledTimes(2)
+    expect(mockEventListener.mock.lastCall[0].params.value).toBe('1234')
+
     mockContextFn.mockRejectedValueOnce(new Error('hello'))
 
     transition = machine.dispatch('init')

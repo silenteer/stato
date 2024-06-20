@@ -43,7 +43,7 @@ export type StageListener<
   AP
 > = {
   name: valueOrArrayValue<Stages['name']>
-  listener: (stage: Stages, dispatch: Stato<Stages, T, AP>['dispatch']) => valueOrPromiseValue<void | (() => void)>
+  listener: (stage: PrettyPrint<Stages & { params: AP }>, dispatch: Stato<Stages, T, AP>['dispatch']) => valueOrPromiseValue<void | (() => void)>
 }
 
 type inferValueOrArrayValue<T> = T extends Array<infer V> ? V : T
@@ -140,7 +140,6 @@ export class Stato<
     transitions: Array<TransitionInstance<S, any>>,
     enterListeners: Array<StageListener<S, T, AP>>,
   ) {
-
     for (const transition of transitions) {
       this.registerTransitionInstance(transition)
     }
@@ -302,7 +301,7 @@ export class Stato<
       for (const item of matches) {
 
         const { name, listener } = item
-        const unlistener = await listener(this.currentState, this.dispatch)
+        const unlistener = await listener({ ...this.currentState, params: this.params }, this.dispatch)
         if (typeof unlistener === 'function') {
           this.unlisteners.add(unlistener)
         }
