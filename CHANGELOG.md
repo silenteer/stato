@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.3.0](https://github.com/silenteer/use-stager/compare/stato1.2.2...stato1.3.0) (2024-06-24)
+
+
+### Features
+
+* added refs api to expose internal control ([5972dcf](https://github.com/silenteer/use-stager/commit/5972dcf20b6d5766de9d150c45ca19796ed84184))
+
 ### [1.2.2](https://github.com/silenteer/use-stager/compare/stato1.2.1...stato1.2.2) (2024-06-20)
 
 
