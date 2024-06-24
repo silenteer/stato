@@ -14,55 +14,32 @@ type TrafficLightStates =
 const trafficLightTemplate = create<TrafficLightStates>()
   .params<{ based: number }>()
   .transition({
-    name: 'to-yellow',
-    from: ['red', 'green'],
-    to: 'yellow',
-    async execution({ context, name }, next: 'red' | 'green') {
-      console.log('transitioning', name, '->', 'yellow')
+    name: 'next',
+    from: ['red', 'green', 'yellow'],
+    to: ['red', 'green', 'yellow'],
+    async execution({ context, name }) {
       await sleep(context.duration)
-      console.log('transitioned', name, '->', 'yellow')
-      return { name: 'yellow', context: { ...context, next } }
-    }
-  })
-  .transition({
-    name: 'to-green-or-red',
-    from: 'yellow',
-    to: ['green', 'red'],
-    async execution({ context, params }) {
-      await new Promise(resolve => setTimeout(resolve, context.duration))
-      return { name: context.next, context }
+      switch (name) {
+        case 'red':
+          return { name: 'yellow', context: { ...context, next: 'green' } }
+        case 'green':
+          return { name: 'yellow', context: { ...context, next: 'red' } }
+        case 'yellow':
+          return { name: context.next, context: { duration: context.duration } }
+      }
     }
   })
   .build()
 
-const manualMachine = createMachine(trafficLightTemplate)
-
-const Home = () => {
-  return <manualMachine.Provider
-    initialState={{ name: 'red', context: { duration: 1000 } }}
-    params={{ based: 1000 }}
-  >
-    <Child />
-  </manualMachine.Provider>
-}
+const machine = createMachine(trafficLightTemplate)
 
 const Child = () => {
-  const currentState = manualMachine.useCurrentState()
-  const dispatch = manualMachine.useDispatch()
+  const currentState = machine.useCurrentState()
+  const dispatch = machine.useDispatch()
 
   return <>
     <div><button onClick={() => {
-      switch (currentState.name) {
-        case 'red':
-          dispatch('to-yellow', 'green')
-          break
-        case 'green':
-          dispatch('to-yellow', 'red')
-          break
-        case 'yellow':
-          dispatch('to-green-or-red')
-          break
-      }
+      dispatch('next')
     }}>Next</button></div>
     <div id="name">
       {currentState.name}
@@ -73,7 +50,12 @@ const Child = () => {
 describe('operational', () => {
 
   it('manual work should work', async () => {
-    render(<Home />)
+    render(<machine.Provider
+      initialState={{ name: 'red', context: { duration: 1000 } }}
+      params={{ based: 1000 }}
+    >
+      <Child />
+    </machine.Provider>)
 
     await userEvent.click(screen.getByText('Next'))
     await sleep(1000)
@@ -87,5 +69,26 @@ describe('operational', () => {
     expect(screen.getByText('green')).not.toBeNull()
   })
 
+  it('test using ref', async () => {
+    const ref = machine.createRef()
+
+    render(<machine.Provider
+      initialState={{ name: 'yellow', context: { duration: 1000, next: 'red' } }}
+      params={{ based: 1000 }}
+      ref={ref}
+    >
+      <Child />
+    </machine.Provider>
+    )
+
+    expect(ref.current).not.toBeNull()
+
+    let dispatched = ref.current?.dispatch('next')
+    expect(ref.current?.isTransitioning).not.toBeNull()
+
+    await dispatched
+    expect(screen.getByText('red')).not.toBeNull()
+
+  })
 
 });

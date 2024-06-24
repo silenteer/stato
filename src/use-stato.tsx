@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useMemo, useSyncExternalStore } from 'react'
+import React, { forwardRef, createContext, useContext, useEffect, useMemo, useSyncExternalStore, useImperativeHandle, useRef } from 'react'
 import { FactoryFn, Stato, StatoDef, TransitionInstance } from './stato'
 
 function buildHashedKeys(obj: any): string {
@@ -10,7 +10,7 @@ function buildHashedKeys(obj: any): string {
 export function createMachine<
   S extends StatoDef,
   T extends TransitionInstance<S>,
-  AP
+  AP = never
 >(
   template: FactoryFn<S, T, AP>,
 ) {
@@ -52,34 +52,50 @@ export function createMachine<
     )
   }
 
-  const Provider = ({ children, initialState, params }: React.PropsWithChildren & { initialState: S, params: AP }) => {
+  const useRef = () => React.useRef<Stato<S, T, AP>>(null)
+  const createRef = () => React.createRef<Stato<S, T, AP>>()
+
+  type PropType = AP extends undefined ? {} : { params: AP }
+
+  const Provider = forwardRef<
+    Stato<S, T, AP>,
+    PropType & React.PropsWithChildren & { initialState: S }
+  >((
+    { children, initialState, ...rest },
+    ref
+  ) => {
     const machine = useMemo(() => {
       console.log('building machine')
       const machine = template({
         initialState,
-        params
+        params: rest['params']
       })
       return machine
-    }, [buildHashedKeys(initialState), buildHashedKeys(params)])
+    }, [buildHashedKeys(initialState), buildHashedKeys(rest['params'])])
+
+    useImperativeHandle(ref, () => machine, [machine])
 
     useEffect(() => {
       return () => {
         console.log('disposing machine')
         machine.dispose()
       }
-    }, [buildHashedKeys(initialState), buildHashedKeys(params)])
+    }, [buildHashedKeys(initialState), buildHashedKeys(rest['params'])])
+
 
     return <Context.Provider value={machine}>
       {children}
     </Context.Provider>
-  }
+  })
 
   return {
     Provider,
     useStato,
     useCurrentState,
     useTransitioning,
-    useDispatch
+    useDispatch,
+    useRef,
+    createRef
   }
 }
 

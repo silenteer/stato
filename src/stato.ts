@@ -16,7 +16,7 @@ export type TransitionInstance<
   From extends valueOrArrayValue<string> = any,
   To extends valueOrArrayValue<string> = any,
   Params extends Array<any> = any,
-  AP = unknown
+  AP = never
 > = {
   name: Event
   from: From
@@ -40,7 +40,7 @@ export type NoTransition = {
 export type StageListener<
   Stages extends StatoDef,
   T extends TransitionInstance<Stages>,
-  AP
+  AP = never
 > = {
   name: valueOrArrayValue<Stages['name']>
   listener: (stage: PrettyPrint<Stages & { params: AP }>, dispatch: Stato<Stages, T, AP>['dispatch']) => valueOrPromiseValue<void | (() => void)>
@@ -56,23 +56,20 @@ export type StateListener<S extends StatoDef> = ((name: S['name'], cb: (name: S)
 export type FactoryFn<
   S extends StatoDef,
   T extends TransitionInstance<S> = NoTransition,
-  AP = unknown
-> = (param: {
-  initialState: S,
-  params: AP
-}) => Stato<S, T, AP>
+  AP = undefined
+> = (param: { initialState: S, params: AP }) => Stato<S, T, AP>
 
 export class StatoBuilder<
   S extends StatoDef,
   T extends TransitionInstance<S> = NoTransition,
-  AP = unknown
+  AP = undefined
 > {
   constructor(
     private transitions: Array<TransitionInstance<S, any>> = [],
     private stateListeners: Array<StageListener<S, T, AP>> = [],
   ) { }
 
-  params<AA extends AP>(): StatoBuilder<S, T, AA> {
+  params<AA>(): StatoBuilder<S, T, AA> {
     return this as any
   }
 
@@ -110,18 +107,20 @@ export class StatoBuilder<
       let enterListeners = [...this.stateListeners]
       return new Stato(
         param.initialState,
-        param.params,
         transitions,
-        enterListeners
+        enterListeners,
+        param.params,
       )
     }
   }
 }
 
+export type inferStato<T> = T extends FactoryFn<infer S, infer T, infer AP> ? Stato<S, T, AP> : never
+
 export class Stato<
   S extends StatoDef,
   T extends TransitionInstance<S>,
-  AP
+  AP = undefined
 > {
 
   public transitioning: [S['name'][], S['name'][]] | undefined
@@ -136,9 +135,9 @@ export class Stato<
 
   constructor(
     public currentState: PrettyPrint<S>,
-    private params: AP,
     transitions: Array<TransitionInstance<S, any>>,
     enterListeners: Array<StageListener<S, T, AP>>,
+    private params: AP,
   ) {
     for (const transition of transitions) {
       this.registerTransitionInstance(transition)
