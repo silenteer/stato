@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.4.2](https://github.com/silenteer/use-stager/compare/stato1.4.1...stato1.4.2) (2024-06-25)
+
+
+### Bug Fixes
+
+* state change triggers when context changes ([0d733df](https://github.com/silenteer/use-stager/commit/0d733df36312f2be494ab3f57aed013e011781ad))
+
 ### [1.4.1](https://github.com/silenteer/use-stager/compare/stato1.4.1-rc.0...stato1.4.1) (2024-06-25)
 
 
