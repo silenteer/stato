@@ -1,4 +1,4 @@
-import React, { forwardRef, createContext, useContext, useEffect, useMemo, useSyncExternalStore, useImperativeHandle, useRef, useCallback, useState } from 'react'
+import React, { forwardRef, createContext, useContext, useEffect, useMemo, useSyncExternalStore, useImperativeHandle, useState } from 'react'
 import { FactoryFn, Stato, StatoDef, TransitionInstance } from './stato'
 
 function buildHashedKeys(obj: any): string | undefined {
@@ -40,14 +40,14 @@ export function createMachine<
     return controller.reset
   }
 
-  const useCurrentState = () => {
+  function useCurrentState<T = S>(selector?: (state: S) => T) {
     const stato = useStato()
     const subscribe = useMemo(() => stato.subscribeToStateChange.bind(stato), [stato])
 
     return useSyncExternalStore(
       subscribe,
-      () => stato.currentState,
-      () => stato.currentState,
+      () => selector ? selector(stato.currentState) : stato.currentState,
+      () => selector ? selector(stato.currentState) : stato.currentState,
     )
   }
 
@@ -56,14 +56,14 @@ export function createMachine<
     return stato.dispatch.bind(stato) as Stato<S, T, AP>['dispatch']
   }
 
-  const useTransitioning = () => {
+  const useTransitioning = (selector?: (state: S) => boolean) => {
     const stato = useStato()
     const subscribe = useMemo(() => stato.subscribeToTransitioning.bind(stato), [stato])
 
     return useSyncExternalStore(
       subscribe,
-      () => stato.transitioning,
-      () => stato.transitioning,
+      () => selector ? selector(stato.currentState) : stato.transitioning,
+      () => selector ? selector(stato.currentState) : stato.transitioning,
     )
   }
 
@@ -115,7 +115,7 @@ export function createMachine<
     useDispatch,
     useRef,
     createRef,
-    useReset
+    useReset,
   }
 }
 
