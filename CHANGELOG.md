@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.4.0](https://github.com/silenteer/use-stager/compare/stato1.3.1...stato1.4.0) (2024-06-25)
+
+
+### Features
+
+* added react-reset (removed state reset) ([00582f0](https://github.com/silenteer/use-stager/commit/00582f0631bee519115350db33a173d70f74b67f))
+
+
+### Bug Fixes
+
+* remove reset, not a good idea ([8005116](https://github.com/silenteer/use-stager/commit/8005116d90377d5a90d4b5f636f26076adf7ceec))
+
 ### [1.3.1](https://github.com/silenteer/use-stager/compare/stato1.3.0...stato1.3.1) (2024-06-25)
 
 
