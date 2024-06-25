@@ -241,6 +241,7 @@ export class Stato<
     }
 
     await this.triggerTransition(transition, params)
+
   }
 
   dispose() {
@@ -271,6 +272,7 @@ export class Stato<
     this.isTransitioning = true
 
     await Promise.all(Array.from(this.transitioningListeners).map(listener => listener()))
+      .catch(e => console.error('error while triggering transitioning listeners', e))
 
     const nextStage: S | undefined = await transition.execution.apply(undefined, [{
       ...this.currentState,
@@ -284,12 +286,15 @@ export class Stato<
           ...nextStage,
         }
         await this.triggerUnlisteners()
+          .catch(e => console.error('error while triggering unlisteners', e))
 
         this.transitioning = undefined
         this.isTransitioning = false
 
         await this.triggerStateChangeListeners()
+          .catch(e => console.error('error while triggering state change listeners', e))
         await this.triggerEventListeners(nextStage.name)
+          .catch(e => console.error('error while triggering event listeners', e))
       } else {
         this.currentState.context = { ...nextStage.context }
       }
