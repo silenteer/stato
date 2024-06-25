@@ -298,7 +298,11 @@ export class Stato<
       } else {
         this.transitioning = undefined
         this.isTransitioning = false
-        this.currentState.context = { ...nextStage.context }
+        this.currentState = {
+          ...this.currentState,
+          context: { ...nextStage.context }
+        }
+
         await this.triggerStateChangeListeners()
           .catch(e => console.error('error while triggering state change listeners', e))
       }

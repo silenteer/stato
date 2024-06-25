@@ -1,4 +1,4 @@
-import React, { forwardRef, createContext, useContext, useEffect, useMemo, useSyncExternalStore, useImperativeHandle, useState, useCallback } from 'react'
+import React, { forwardRef, createContext, useContext, useEffect, useMemo, useSyncExternalStore, useImperativeHandle, useState } from 'react'
 import { FactoryFn, Stato, StatoDef, TransitionInstance } from './stato'
 
 function buildHashedKeys(obj: any): string | undefined {
@@ -42,7 +42,7 @@ export function createMachine<
 
   function useCurrentState<T = S>(selector?: (state: S) => T) {
     const stato = useStato()
-    const subscribe = useCallback(() => stato.subscribeToStateChange.bind(stato), [stato])
+    const subscribe = useMemo(() => stato.subscribeToStateChange.bind(stato), [stato])
 
     return useSyncExternalStore(
       subscribe,
@@ -58,7 +58,7 @@ export function createMachine<
 
   const useTransitioning = (selector?: (state: S) => boolean) => {
     const stato = useStato()
-    const subscribe = useCallback(() => stato.subscribeToTransitioning.bind(stato), [stato])
+    const subscribe = useMemo(() => stato.subscribeToTransitioning.bind(stato), [stato])
 
     return useSyncExternalStore(
       subscribe,
