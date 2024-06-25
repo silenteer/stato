@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.4.4](https://github.com/silenteer/use-stager/compare/stato1.4.3...stato1.4.4) (2024-06-25)
+
+
+### Bug Fixes
+
+* useCallback instead of useMemo ([66c07d5](https://github.com/silenteer/use-stager/commit/66c07d50d8124e2c47be02a136487c9302f4f437))
+
 ### [1.4.3](https://github.com/silenteer/use-stager/compare/stato1.4.2...stato1.4.3) (2024-06-25)
 
 
