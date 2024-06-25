@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.3.1](https://github.com/silenteer/use-stager/compare/stato1.3.0...stato1.3.1) (2024-06-25)
+
+
+### Features
+
+* added reset api, machine will be back to the initialState ([20d778a](https://github.com/silenteer/use-stager/commit/20d778ab6abeb483105f00f47d44f2e1578bf4d4))
+
 ## [1.3.0](https://github.com/silenteer/use-stager/compare/stato1.2.2...stato1.3.0) (2024-06-24)
 
 
