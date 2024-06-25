@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.4.6](https://github.com/silenteer/use-stager/compare/stato1.4.5...stato1.4.6) (2024-06-25)
+
+
+### Features
+
+* added type variations to selectors ([f8d4582](https://github.com/silenteer/use-stager/commit/f8d458288cf62aa57f34bb7169fe9dc15e0484f2))
+
 ### [1.4.5](https://github.com/silenteer/use-stager/compare/stato1.4.4...stato1.4.5) (2024-06-25)
 
 
