@@ -1,8 +1,8 @@
-import { render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 
 import { setTimeout as sleep } from "timers/promises";
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, afterEach } from 'vitest';
 import { createMachine } from "../src/use-stato";
 import { State, create } from '../src/stato';
 
@@ -49,6 +49,10 @@ const Child = () => {
 
 describe('operational', () => {
 
+  afterEach(() => {
+    cleanup()
+  })
+
   it('manual work should work', async () => {
     render(<machine.Provider
       initialState={{ name: 'red', context: { duration: 1000 } }}
@@ -83,13 +87,15 @@ describe('operational', () => {
 
     expect(ref.current).not.toBeNull()
 
-    let dispatched = ref.current?.dispatch('next')
-    expect(ref.current?.isTransitioning).not.toBeNull()
+    let dispatched = ref.current?.machine.dispatch('next')
+    expect(ref.current?.machine.isTransitioning).not.toBeNull()
 
     await dispatched
     expect(screen.getByText('red')).not.toBeNull()
 
+    ref.current?.reset()
+    await sleep(0)
+    expect(screen.getByText('yellow')).not.toBeNull()
   })
-
 
 });

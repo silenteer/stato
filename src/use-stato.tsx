@@ -1,4 +1,4 @@
-import React, { forwardRef, createContext, useContext, useEffect, useMemo, useSyncExternalStore, useImperativeHandle, useRef } from 'react'
+import React, { forwardRef, createContext, useContext, useEffect, useMemo, useSyncExternalStore, useImperativeHandle, useRef, useCallback, useState } from 'react'
 import { FactoryFn, Stato, StatoDef, TransitionInstance } from './stato'
 
 function buildHashedKeys(obj: any): string | undefined {
@@ -18,15 +18,26 @@ export function createMachine<
 >(
   template: FactoryFn<S, T, AP>,
 ) {
-  const Context = createContext<Stato<S, T, AP> | undefined>(undefined)
+  type Controller = { machine: Stato<S, T, AP>, reset: () => void }
+  const Context = createContext<Controller | undefined>(undefined)
 
-  const useStato = () => {
+  const useController = () => {
     const context = useContext(Context)
     if (!context) {
-      throw new Error('useStato must be used within a StatoProvider')
+      throw new Error('useController must be used within a StatoProvider')
     }
 
     return context
+  }
+
+  const useStato = () => {
+    const controller = useController()
+    return controller.machine
+  }
+
+  const useReset = () => {
+    const controller = useController()
+    return controller.reset
   }
 
   const useCurrentState = () => {
@@ -56,41 +67,42 @@ export function createMachine<
     )
   }
 
-  const useRef = () => React.useRef<Stato<S, T, AP>>(null)
-  const createRef = () => React.createRef<Stato<S, T, AP>>()
-  const useReset = () => {
-    const stato = useStato()
-    return stato.reset.bind(stato) as Stato<S, T, AP>['reset']
-  }
+  const useRef = () => React.useRef<Controller>(null)
+  const createRef = () => React.createRef<Controller>()
 
   type PropType = AP extends undefined ? {} : { params: AP }
 
   const Provider = forwardRef<
-    Stato<S, T, AP>,
+    Controller,
     PropType & React.PropsWithChildren & { initialState: S }
   >((
     { children, initialState, ...rest },
     ref
   ) => {
-    const machine = useMemo(() => {
-      console.log('building machine')
+    const [version, setVersion] = useState(0)
+
+    const controller = useMemo(() => {
+      console.log(`version-${version}`, 'building machine')
       const machine = template({
         initialState,
         params: rest['params']
       })
-      return machine
-    }, [buildHashedKeys(initialState), buildHashedKeys(rest['params'])])
+      return {
+        machine,
+        reset: () => setVersion(version + 1)
+      }
+    }, [buildHashedKeys(initialState), buildHashedKeys(rest['params']), version])
 
-    useImperativeHandle(ref, () => machine, [machine])
+    useImperativeHandle(ref, () => controller, [controller])
 
     useEffect(() => {
       return () => {
-        console.log('disposing machine')
-        machine.dispose()
+        console.log(`version-${version}`, 'building machine')
+        controller.machine.dispose()
       }
     }, [buildHashedKeys(initialState), buildHashedKeys(rest['params'])])
 
-    return <Context.Provider value={machine}>
+    return <Context.Provider value={controller}>
       {children}
     </Context.Provider>
   })
