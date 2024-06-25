@@ -1,7 +1,11 @@
 import React, { forwardRef, createContext, useContext, useEffect, useMemo, useSyncExternalStore, useImperativeHandle, useRef } from 'react'
 import { FactoryFn, Stato, StatoDef, TransitionInstance } from './stato'
 
-function buildHashedKeys(obj: any): string {
+function buildHashedKeys(obj: any): string | undefined {
+  if (obj === undefined) {
+    return undefined
+  }
+
   const keys = Object.keys(obj)
   const sortedKeys = keys.sort()
   return sortedKeys.map(key => JSON.stringify(obj[key])).join('')
@@ -54,6 +58,10 @@ export function createMachine<
 
   const useRef = () => React.useRef<Stato<S, T, AP>>(null)
   const createRef = () => React.createRef<Stato<S, T, AP>>()
+  const useReset = () => {
+    const stato = useStato()
+    return stato.reset.bind(stato) as Stato<S, T, AP>['reset']
+  }
 
   type PropType = AP extends undefined ? {} : { params: AP }
 
@@ -82,7 +90,6 @@ export function createMachine<
       }
     }, [buildHashedKeys(initialState), buildHashedKeys(rest['params'])])
 
-
     return <Context.Provider value={machine}>
       {children}
     </Context.Provider>
@@ -95,7 +102,8 @@ export function createMachine<
     useTransitioning,
     useDispatch,
     useRef,
-    createRef
+    createRef,
+    useReset
   }
 }
 

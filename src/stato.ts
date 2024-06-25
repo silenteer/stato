@@ -1,5 +1,6 @@
 import { createRouter } from "radix3"
 import type { PrettyPrint } from "./utils"
+import clonedeep from "lodash.clonedeep"
 
 export type StatosDef<Stage, Event, Context> = {
   name: Stage
@@ -126,6 +127,8 @@ export class Stato<
   public transitioning: [S['name'][], S['name'][]] | undefined
   public isTransitioning: boolean
 
+  public currentState: S
+
   private unlisteners = new Set<() => void | Promise<void>>()
   private transitionRouter = createRouter<TransitionInstance<S>>()
   private listenerRouters = createRouter<Set<StageListener<S, T, AP>>>()
@@ -134,11 +137,13 @@ export class Stato<
   private stateChangeListeners = new Set<() => void>()
 
   constructor(
-    public currentState: PrettyPrint<S>,
+    public initialState: PrettyPrint<S>,
     transitions: Array<TransitionInstance<S, any>>,
     enterListeners: Array<StageListener<S, T, AP>>,
     private params: AP,
   ) {
+    this.currentState = clonedeep(initialState)
+
     for (const transition of transitions) {
       this.registerTransitionInstance(transition)
     }
@@ -243,6 +248,11 @@ export class Stato<
     this.unlisteners.clear()
   }
 
+  reset() {
+    this.currentState = clonedeep(this.initialState)
+    this.triggerEventListeners(this.currentState.name)
+  }
+
   private async triggerTransition(transition: TransitionInstance<S>, params: any[]) {
     const targetFrom: string[] = Array.isArray(transition.from)
       ? transition.from
@@ -253,12 +263,12 @@ export class Stato<
       : [transition.to]
 
     if (!targetFrom.includes(this.currentState.name)) {
-      console.log(`from condition doesn't match`, transition.from, this.currentState.name)
+      console.error('unable to make transition, expected one of %O, current state is %s', transition.from, this.currentState.name)
       return
     }
 
     if (!targetTo.find(to => this.transitionRouter.lookup(`/route/${this.currentState.name}/${to}`))) {
-      console.log(`to condition doesn't match`, transition.to)
+      console.error(`unable to make transtion, there's no transition from %s, to %s`, this.currentState.name, transition.to)
       return
     }
 
@@ -286,7 +296,7 @@ export class Stato<
         await this.triggerStateChangeListeners()
         await this.triggerEventListeners(nextStage.name)
       } else {
-        this.currentState.context = nextStage.context
+        this.currentState.context = { ...nextStage.context }
       }
     } else {
       this.transitioning = undefined
