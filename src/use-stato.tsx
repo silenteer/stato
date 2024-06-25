@@ -19,6 +19,8 @@ export function createMachine<
   template: FactoryFn<S, T, AP>,
 ) {
   type Controller = { machine: Stato<S, T, AP>, reset: () => void }
+  type Transitions = Stato<S, T, AP>['transitioning']
+
   const Context = createContext<Controller | undefined>(undefined)
 
   const useController = () => {
@@ -40,7 +42,9 @@ export function createMachine<
     return controller.reset
   }
 
-  function useCurrentState<T = S>(selector?: (state: S) => T) {
+  function useCurrentState(): S
+  function useCurrentState<T>(selector: (state: S) => T): T
+  function useCurrentState<T>(selector?: (state: S) => T): T | S {
     const stato = useStato()
     const subscribe = useMemo(() => stato.subscribeToStateChange.bind(stato), [stato])
 
@@ -56,14 +60,16 @@ export function createMachine<
     return stato.dispatch.bind(stato) as Stato<S, T, AP>['dispatch']
   }
 
-  const useTransitioning = (selector?: (state: S) => boolean) => {
+  function useTransitioning(): T
+  function useTransitioning<X>(selector: (transition: Transitions) => X): X
+  function useTransitioning<X>(selector?: (transition: Transitions) => X): X | Transitions {
     const stato = useStato()
     const subscribe = useMemo(() => stato.subscribeToTransitioning.bind(stato), [stato])
 
     return useSyncExternalStore(
       subscribe,
-      () => selector ? selector(stato.currentState) : stato.transitioning,
-      () => selector ? selector(stato.currentState) : stato.transitioning,
+      () => selector ? selector(stato.transitioning) : stato.transitioning,
+      () => selector ? selector(stato.transitioning) : stato.transitioning,
     )
   }
 
