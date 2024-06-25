@@ -248,11 +248,6 @@ export class Stato<
     this.unlisteners.clear()
   }
 
-  reset() {
-    this.currentState = clonedeep(this.initialState)
-    this.triggerEventListeners(this.currentState.name)
-  }
-
   private async triggerTransition(transition: TransitionInstance<S>, params: any[]) {
     const targetFrom: string[] = Array.isArray(transition.from)
       ? transition.from
