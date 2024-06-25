@@ -75,10 +75,10 @@ export function createMachine<
   const Provider = forwardRef<
     Controller,
     PropType & React.PropsWithChildren & { initialState: S }
-  >((
+  >(function StatoController(
     { children, initialState, ...rest },
     ref
-  ) => {
+  ) {
     const [version, setVersion] = useState(0)
 
     const controller = useMemo(() => {
