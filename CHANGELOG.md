@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.4.3](https://github.com/silenteer/use-stager/compare/stato1.4.2...stato1.4.3) (2024-06-25)
+
+
+### Features
+
+* added transition and state selector ([5662d6a](https://github.com/silenteer/use-stager/commit/5662d6a35403feb27af5715f3a4eee95918bf4a9))
+
 ### [1.4.2](https://github.com/silenteer/use-stager/compare/stato1.4.1...stato1.4.2) (2024-06-25)
 
 
