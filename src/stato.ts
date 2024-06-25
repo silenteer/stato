@@ -296,6 +296,8 @@ export class Stato<
         await this.triggerEventListeners(nextStage.name)
           .catch(e => console.error('error while triggering event listeners', e))
       } else {
+        this.transitioning = undefined
+        this.isTransitioning = false
         this.currentState.context = { ...nextStage.context }
       }
     } else {
