@@ -54,8 +54,14 @@ export function createMachine<
   }
 
   const useIsStarted = () => {
-    const controller = useController()
-    return controller.machine.started
+    const stato = useStato()
+    const subscribe = useMemo(() => stato.subscribeToLifecycle.bind(stato), [stato])
+
+    return useSyncExternalStore(
+      subscribe,
+      () => stato.started,
+      () => stato.started,
+    )
   }
 
   function useCurrentState(): S

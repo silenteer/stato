@@ -47,6 +47,11 @@ const Child = () => {
   </>
 }
 
+const Child2 = () => {
+  const isStarted = machine.useIsStarted()
+  return <div>Started - {JSON.stringify(isStarted)}</div>
+}
+
 describe('operational', () => {
 
   afterEach(() => {
@@ -98,4 +103,31 @@ describe('operational', () => {
     expect(screen.getByText('yellow')).not.toBeNull()
   })
 
+  it('test lifecycle', async () => {
+    const ref = machine.createRef()
+
+    render(<machine.Provider
+      initialState={{ name: 'yellow', context: { duration: 1000, next: 'red' } }}
+      params={{ based: 1000 }}
+      ref={ref}
+      autoStart={false}
+    >
+      <Child />
+      <Child2 />
+    </machine.Provider>
+    )
+
+    expect(screen.getByText('yellow')).not.toBeNull()
+    await userEvent.click(screen.getByText('Next'))
+
+    await sleep(1000)
+    expect(screen.getByText('yellow')).not.toBeNull()
+    expect(screen.getByText('Started - false')).not.toBeNull()
+
+    ref.current?.machine.start()
+    await userEvent.click(screen.getByText('Next'))
+    await sleep(1000)
+    expect(screen.getByText('red')).not.toBeNull()
+    expect(screen.getByText('Started - true')).not.toBeNull()
+  })
 });

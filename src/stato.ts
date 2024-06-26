@@ -137,6 +137,7 @@ export class Stato<
 
   private transitioningListeners = new Set<() => void>()
   private stateChangeListeners = new Set<() => void>()
+  private lifecycleListeners = new Set<() => void>()
 
   constructor(
     public initialState: PrettyPrint<S>,
@@ -198,15 +199,22 @@ export class Stato<
   start() {
     this.started = true
     this.triggerEventListeners(this.currentState.name)
+    this.triggerLifecycleListeners()
   }
 
   finish() {
     this.dispose()
     this.started = false
+    this.triggerLifecycleListeners()
   }
 
   onStateChanged(listener: StageListener<S, T, AP>) {
     return this.registerStateListener(listener)
+  }
+
+  subscribeToLifecycle(onChange: () => void): () => void {
+    const unlisten = this.lifecycleListeners.add(onChange)
+    return () => unlisten.delete(onChange)
   }
 
   subscribeToStateChange(onChange: () => void): () => void {
@@ -351,6 +359,12 @@ export class Stato<
 
   private async triggerStateChangeListeners() {
     for (const listener of this.stateChangeListeners) {
+      listener()
+    }
+  }
+
+  private async triggerLifecycleListeners() {
+    for (const listener of this.lifecycleListeners) {
       listener()
     }
   }
