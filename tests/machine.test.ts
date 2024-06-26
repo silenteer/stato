@@ -95,5 +95,25 @@ describe("basic machine function", () => {
     expect(machine.currentState.name).toBe('error')
   })
 
+  test('yet started machine cannot dispatch', async () => {
+    const machine = template({
+      initialState: { name: 'idle', context: { promise: mockContextFn } },
+      params: { value: '1234' },
+      autoStart: false
+    })
+
+    expect(machine.started).toBeFalsy()
+    expect(machine.currentState.name).toBe('idle')
+    await machine.dispatch('init')
+    expect(machine.currentState.name).toBe('idle')
+    expect(mockEventListener).toBeCalledTimes(0)
+
+    machine.start()
+    expect(machine.started).toBeTruthy()
+    expect(mockEventListener).toBeCalledTimes(1)
+    await machine.dispatch('init')
+    expect(machine.currentState.name).toBe('success')
+  })
+
 })
 

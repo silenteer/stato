@@ -58,7 +58,7 @@ export type FactoryFn<
   S extends StatoDef,
   T extends TransitionInstance<S> = NoTransition,
   AP = undefined
-> = (param: { initialState: S, params: AP }) => Stato<S, T, AP>
+> = (param: { initialState: S, params: AP, autoStart?: boolean }) => Stato<S, T, AP>
 
 export class StatoBuilder<
   S extends StatoDef,
@@ -111,6 +111,7 @@ export class StatoBuilder<
         transitions,
         enterListeners,
         param.params,
+        { start: param.autoStart }
       )
     }
   }
@@ -124,8 +125,9 @@ export class Stato<
   AP = undefined
 > {
 
-  public transitioning: [S['name'][], S['name'][]] | undefined
+  public transitioning: [S['name'], S['name'][]] | undefined
   public isTransitioning: boolean
+  public started: boolean = false
 
   public currentState: S
 
@@ -141,6 +143,9 @@ export class Stato<
     transitions: Array<TransitionInstance<S, any>>,
     enterListeners: Array<StageListener<S, T, AP>>,
     private params: AP,
+    statoOptions?: {
+      start?: boolean
+    },
   ) {
     this.currentState = clonedeep(initialState)
 
@@ -152,7 +157,10 @@ export class Stato<
       this.registerStateListener(listenerRegister)
     }
 
-    this.triggerEventListeners(this.currentState.name)
+    const shouldStart = statoOptions?.start ?? true
+    if (shouldStart) {
+      this.start()
+    }
   }
 
   private registerTransitionInstance(transition: TransitionInstance<S>) {
@@ -185,6 +193,16 @@ export class Stato<
     }
 
     return cleanUp
+  }
+
+  start() {
+    this.started = true
+    this.triggerEventListeners(this.currentState.name)
+  }
+
+  finish() {
+    this.dispose()
+    this.started = false
   }
 
   onStateChanged(listener: StageListener<S, T, AP>) {
@@ -221,6 +239,11 @@ export class Stato<
       : any
     ]
   ) => Promise<void> = async (name, ...params) => {
+    if (!this.started) {
+      console.log('stato not started, skipping dispatch')
+      return
+    }
+
     if (this.transitioning) {
       console.log('transitioning, skipping dispatch')
       return
@@ -268,7 +291,7 @@ export class Stato<
       return
     }
 
-    this.transitioning = [[this.currentState.name], targetTo]
+    this.transitioning = [this.currentState.name, targetTo]
     this.isTransitioning = true
 
     await Promise.all(Array.from(this.transitioningListeners).map(listener => listener()))

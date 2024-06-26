@@ -1,5 +1,6 @@
 import React, { forwardRef, createContext, useContext, useEffect, useMemo, useSyncExternalStore, useImperativeHandle, useState } from 'react'
 import { FactoryFn, Stato, StatoDef, TransitionInstance } from './stato'
+import { PrettyPrint } from './utils'
 
 function buildHashedKeys(obj: any): string | undefined {
   if (obj === undefined) {
@@ -14,12 +15,12 @@ function buildHashedKeys(obj: any): string | undefined {
 export function createMachine<
   S extends StatoDef,
   T extends TransitionInstance<S>,
-  AP = never
+  AP = never,
 >(
   template: FactoryFn<S, T, AP>,
 ) {
   type Controller = { machine: Stato<S, T, AP>, reset: () => void }
-  type Transitions = Stato<S, T, AP>['transitioning']
+  type Transitions = PrettyPrint<Stato<S, T, AP>['transitioning']>
 
   const Context = createContext<Controller | undefined>(undefined)
 
@@ -40,6 +41,21 @@ export function createMachine<
   const useReset = () => {
     const controller = useController()
     return controller.reset
+  }
+
+  const useStart = () => {
+    const controller = useController()
+    return controller.machine.start.bind(controller.machine) as Stato<S, T, AP>['start']
+  }
+
+  const useFinish = () => {
+    const controller = useController()
+    return controller.machine.finish.bind(controller.machine) as Stato<S, T, AP>['finish']
+  }
+
+  const useIsStarted = () => {
+    const controller = useController()
+    return controller.machine.started
   }
 
   function useCurrentState(): S
@@ -80,7 +96,7 @@ export function createMachine<
 
   const Provider = forwardRef<
     Controller,
-    PropType & React.PropsWithChildren & { initialState: S }
+    PropType & React.PropsWithChildren & { initialState: S } & { autoStart?: boolean }
   >(function StatoController(
     { children, initialState, ...rest },
     ref
@@ -88,10 +104,10 @@ export function createMachine<
     const [version, setVersion] = useState(0)
 
     const controller = useMemo(() => {
-      console.log(`version-${version}`, 'building machine')
       const machine = template({
         initialState,
-        params: rest['params']
+        params: rest['params'],
+        autoStart: rest['autoStart']
       })
       return {
         machine,
@@ -103,7 +119,6 @@ export function createMachine<
 
     useEffect(() => {
       return () => {
-        console.log(`version-${version}`, 'building machine')
         controller.machine.dispose()
       }
     }, [buildHashedKeys(initialState), buildHashedKeys(rest['params'])])
@@ -122,6 +137,9 @@ export function createMachine<
     useRef,
     createRef,
     useReset,
+    useStart,
+    useFinish,
+    useIsStarted
   }
 }
 
