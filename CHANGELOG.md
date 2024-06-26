@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.5.0](https://github.com/silenteer/use-stager/compare/stato1.4.6...stato1.5.0) (2024-06-26)
+
+
+### Features
+
+* added start/stop api and corresponding react hooks ([b1518ef](https://github.com/silenteer/use-stager/commit/b1518efd8b2c3259b897d1f1c9f6584f133b2392))
+
 ### [1.4.6](https://github.com/silenteer/use-stager/compare/stato1.4.5...stato1.4.6) (2024-06-25)
 
 
